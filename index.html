@@ -755,104 +755,121 @@ async function saveMasterSettings() {
     }
   }
 
-  // マスタ設定関連（ランクの追加・編集・削除）
-  function openMasterModal() {
-    renderMasterRankTable();
-    renderStaffManagerTable();
-    document.getElementById("masterModal").style.display = "flex";
-  }
+// マスタ設定画面を開く
+function openMasterModal() {
+  renderMasterRankTable();
+  renderStaffManagerTable();
+  document.getElementById("masterModal").style.display = "flex";
+}
 
-  function renderMasterRankTable() {
-    const tbodyMaster = document.getElementById("masterTableBody");
-    tbodyMaster.innerHTML = "";
-    rankMaster.forEach((m, idx) => {
-      tbodyMaster.innerHTML += `
-        <tr>
-          <td style="padding:4px; border:1px solid #ccc;">
-            <input type="text" id="master-label-${idx}" value="${m.label}" style="width:100%; padding:4px; box-sizing:border-box;">
-          </td>
-          <td style="padding:4px; border:1px solid #ccc;">
-            ¥ <input type="number" id="master-rate-${idx}" value="${m.rate}" style="width:70px; padding:4px;">
-          </td>
-          <td style="padding:4px; border:1px solid #ccc; text-align:center;">
-            <button class="btn-delete" onclick="deleteRank(${idx})">削除</button>
-          </td>
-        </tr>
-      `;
-    });
-  }
+// ランクマスタ表を描画
+function renderMasterRankTable() {
+  const tbodyMaster = document.getElementById("masterTableBody");
+  tbodyMaster.innerHTML = "";
+  rankMaster.forEach((m, idx) => {
+    tbodyMaster.innerHTML += `
+      <tr class="rank-row" data-key="${m.key}">
+        <td style="padding:4px; border:1px solid #ccc;">
+          <input type="text" class="rank-input-label" value="${m.label}" style="width:100%; padding:4px; box-sizing:border-box;">
+        </td>
+        <td style="padding:4px; border:1px solid #ccc;">
+          ¥ <input type="number" class="rank-input-rate" value="${m.rate}" style="width:70px; padding:4px;">
+        </td>
+        <td style="padding:4px; border:1px solid #ccc; text-align:center;">
+          <button class="btn-delete" onclick="deleteRankRow(this)">削除</button>
+        </td>
+      </tr>
+    `;
+  });
+}
 
-  function addNewRankRow() {
-    const newIdx = rankMaster.length + 1;
-    rankMaster.push({
-      key: `rank_custom_${Date.now()}`,
-      label: `新規ランク ${newIdx}`,
-      rate: 500
-    });
-    renderMasterRankTable();
-  }
+// 新規行を画面に追加（即時入力可能）
+function addNewRankRow() {
+  const tbodyMaster = document.getElementById("masterTableBody");
+  const newKey = `rank_custom_${Date.now()}`;
+  const newRow = document.createElement("tr");
+  newRow.className = "rank-row";
+  newRow.setAttribute("data-key", newKey);
+  newRow.innerHTML = `
+    <td style="padding:4px; border:1px solid #ccc;">
+      <input type="text" class="rank-input-label" placeholder="ランク名を入力" style="width:100%; padding:4px; box-sizing:border-box;">
+    </td>
+    <td style="padding:4px; border:1px solid #ccc;">
+      ¥ <input type="number" class="rank-input-rate" value="500" style="width:70px; padding:4px;">
+    </td>
+    <td style="padding:4px; border:1px solid #ccc; text-align:center;">
+      <button class="btn-delete" onclick="deleteRankRow(this)">削除</button>
+    </td>
+  `;
+  tbodyMaster.appendChild(newRow);
+}
 
-  function deleteRank(idx) {
-    if (rankMaster.length <= 1) {
-      alert("最低1つのランクが必要です。");
-      return;
+// 行の削除
+function deleteRankRow(btn) {
+  const tbody = document.getElementById("masterTableBody");
+  if (tbody.querySelectorAll("tr").length <= 1) {
+    alert("最低1つのランクが必要です。");
+    return;
+  }
+  btn.closest("tr").remove();
+}
+
+// ランクマスタを画面から収集してGASへ送信・保存
+async function saveMasterSettings() {
+  const rows = document.querySelectorAll("#masterTableBody tr.rank-row");
+  const newRankList = [];
+
+  rows.forEach((row, idx) => {
+    const key = row.getAttribute("data-key") || `rank_${idx + 1}`;
+    const labelInput = row.querySelector(".rank-input-label");
+    const rateInput = row.querySelector(".rank-input-rate");
+
+    const label = labelInput ? labelInput.value.trim() : "";
+    const rate = rateInput ? parseInt(rateInput.value) : 0;
+
+    if (label) {
+      newRankList.push({
+        key: key,
+        label: label,
+        rate: isNaN(rate) ? 0 : rate
+      });
     }
-    rankMaster.splice(idx, 1);
-    renderMasterRankTable();
+  });
+
+  if (newRankList.length === 0) {
+    alert("ランク名を入力してください。");
+    return;
   }
 
-  function renderStaffManagerTable() {
-    const tbodyStaff = document.getElementById("staffManagerTableBody");
-    tbodyStaff.innerHTML = "";
-    staffList.forEach((s) => {
-      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定" };
-      tbodyStaff.innerHTML += `
-        <tr>
-          <td style="padding:6px; border:1px solid #ccc; font-weight:bold;">${s.name}</td>
-          <td style="padding:6px; border:1px solid #ccc;">${rank.label}</td>
-          <td style="padding:6px; border:1px solid #ccc; text-align:center;">
-            <button class="btn-delete" onclick="deleteStaff(${s.id})">削除 (退職)</button>
-          </td>
-        </tr>
-      `;
-    });
-  }
+  // ローカル変数を更新
+  rankMaster = newRankList;
+  refreshStaffUI();
+  renderRanking();
+  closeModal('masterModal');
 
-  async function deleteStaff(staffId) {
-    const target = staffList.find(s => s.id === staffId);
-    if (target && confirm(`スタッフ「${target.name}」さんをスターから削除しますか？`)) {
-      staffList = staffList.filter(s => s.id !== staffId);
-      renderStaffManagerTable();
-      renderRanking();
-
-      if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
-        try {
-          await fetch(GAS_API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "deleteStaff", staffId: staffId })
-          });
-        } catch (e) {
-          console.error("削除エラー:", e);
-        }
+  // スプレッドシートへ送信
+  if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
+    try {
+      const res = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "saveRankMaster",
+          rankMaster: rankMaster
+        })
+      });
+      const result = await res.json();
+      if (result.status === "success") {
+        alert("ランクマスタをスプレッドシートに保存・同期しました！");
       }
+    } catch (e) {
+      console.error("マスタ同期エラー:", e);
+      alert("マスタ設定を保存しました（通信エラーのためローカルのみ反映）");
     }
+  } else {
+    alert("マスタ設定を保存しました（ローカル）");
   }
-
-  function saveMasterSettings() {
-    rankMaster.forEach((m, idx) => {
-      const labelInput = document.getElementById(`master-label-${idx}`);
-      const rateInput = document.getElementById(`master-rate-${idx}`);
-      if (labelInput && labelInput.value.trim()) m.label = labelInput.value.trim();
-      if (rateInput && !isNaN(parseInt(rateInput.value))) m.rate = parseInt(rateInput.value);
-    });
-
-    refreshStaffUI();
-    renderRanking();
-    closeModal('masterModal');
-    alert("マスタ設定を保存しました / Master settings saved!");
-  }
-
+}
   // A4集計印刷
   function openPrintModal() {
     const ymParts = selectedMonth.split('-');
