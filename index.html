@@ -256,7 +256,7 @@
       cursor: pointer;
       width: 100%;
       font-weight: bold;
-      margin-top: 4px;
+      margin-top: 6px;
     }
 
     /* Printable Feedback Sheet Design */
@@ -417,7 +417,7 @@
 
     <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top:16px;">
       <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('masterModal')">閉じる / Close</button>
-      <button class="btn btn-primary" style="padding: 8px 16px; border-radius: 6px;" onclick="saveMasterSettings()">保存 / Save</button>
+      <button class="btn btn-primary" id="saveMasterBtn" style="padding: 8px 16px; border-radius: 6px;" onclick="saveMasterSettings()">保存 / Save</button>
     </div>
   </div>
 </div>
@@ -465,10 +465,9 @@
 </div>
 
 <script>
-  // ★★★ GASのデプロイURLをここに設定してください ★★★
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyTlBLcWe-IGR2tHBZAbPetTpY_5sV5M8bIWRFhBo8x89wzzXWji-6tPa9knLHaOfY/exec";
 
-  // 1. ランクマスタ（自由に編集・追加可能）
+  // 1. ランクマスタ
   let rankMaster = [
     { key: "rank_1", label: "トレーニング中", rate: 300 },
     { key: "rank_2", label: "スタッフ", rate: 500 },
@@ -476,11 +475,11 @@
     { key: "rank_4", label: "サブトレーナー", rate: 1000 }
   ];
 
-  // 2. デフォルトスタッフリスト
+  // 2. スタッフリスト
   let staffList = [
-    { id: 1, name: "店長", rankKey: "rank_4" },
-    { id: 2, name: "マネージャー", rankKey: "rank_3" },
-    { id: 3, name: "オーナー", rankKey: "rank_4" }
+    { id: "1", name: "店長", rankKey: "rank_4" },
+    { id: "2", name: "マネージャー", rankKey: "rank_3" },
+    { id: "3", name: "オーナー", rankKey: "rank_4" }
   ];
 
   function getYearMonthString(dateObj) {
@@ -584,7 +583,7 @@
           <td><b>${item.totalCount}</b></td>
           <td class="reward-text">¥${item.totalAmount.toLocaleString()}</td>
           <td>
-            <button class="btn-receipt" onclick="toggleDrawer(${item.id})">
+            <button class="btn-receipt" onclick="toggleDrawer('${item.id}')">
               📷 ${item.totalCount}枚
             </button>
           </td>
@@ -613,7 +612,9 @@
 
   function toggleDrawer(id) {
     const drawer = document.getElementById(`drawer-${id}`);
-    drawer.style.display = drawer.style.display === "table-row" ? "none" : "table-row";
+    if (drawer) {
+      drawer.style.display = drawer.style.display === "table-row" ? "none" : "table-row";
+    }
   }
 
   function changeMonth() {
@@ -629,61 +630,28 @@
     document.getElementById(id).style.display = "none";
   }
 
- // スプレッドシートから全データ取得（ランクマスタ含む）
-async function loadDataFromSpreadsheet() {
-  if (!GAS_API_URL || GAS_API_URL.includes("XXXXX")) return;
-  try {
-    const res = await fetch(GAS_API_URL);
-    const data = await res.json();
-    if (data.rankMaster && data.rankMaster.length > 0) {
-      rankMaster = data.rankMaster; // スプレッドシートのランクマスタを全端末で同期
-    }
-    if (data.staffList && data.staffList.length > 0) {
-      staffList = data.staffList;
-    }
-    if (data.acquisitionsData) {
-      acquisitionsData = data.acquisitionsData;
-    }
-    refreshStaffUI();
-    renderRanking();
-  } catch (err) {
-    console.warn("GAS同期中:", err);
-  }
-}
-// ランクマスタの保存・スプレッドシート同期処理
-async function saveMasterSettings() {
-  // 1. 画面の入力値を反映
-  rankMaster.forEach((m, idx) => {
-    const labelInput = document.getElementById(`master-label-${idx}`);
-    const rateInput = document.getElementById(`master-rate-${idx}`);
-    if (labelInput && labelInput.value.trim()) m.label = labelInput.value.trim();
-    if (rateInput && !isNaN(parseInt(rateInput.value))) m.rate = parseInt(rateInput.value);
-  });
-
-  refreshStaffUI();
-  renderRanking();
-  closeModal('masterModal');
-
-  // 2. スプレッドシートへランクマスタを一括送信
-  if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
+  // スプレッドシートからデータ取得
+  async function loadDataFromSpreadsheet() {
+    if (!GAS_API_URL || GAS_API_URL.includes("XXXXX")) return;
     try {
-      await fetch(GAS_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "saveRankMaster",
-          rankMaster: rankMaster
-        })
-      });
-      alert("ランクマスタをスプレッドシートに保存・同期しました！");
-    } catch (e) {
-      console.error("マスタ同期エラー:", e);
-      alert("マスタ設定をローカルに保存しました（通信エラー）");
+      const res = await fetch(GAS_API_URL);
+      const data = await res.json();
+      if (data.rankMaster && data.rankMaster.length > 0) {
+        rankMaster = data.rankMaster;
+      }
+      if (data.staffList && data.staffList.length > 0) {
+        staffList = data.staffList;
+      }
+      if (data.acquisitionsData) {
+        acquisitionsData = data.acquisitionsData;
+      }
+      refreshStaffUI();
+      renderRanking();
+    } catch (err) {
+      console.warn("GAS同期中:", err);
     }
-  } else {
-    alert("マスタ設定を保存しました（ローカル）");
   }
-}
+
   // レシート登録
   async function submitAcquisition() {
     const name = document.getElementById("staffNameInput").value.trim();
@@ -716,7 +684,7 @@ async function saveMasterSettings() {
     if (existingStaff) {
       existingStaff.rankKey = rankKey;
     } else {
-      staffList.push({ id: Date.now(), name: name, rankKey: rankKey });
+      staffList.push({ id: String(Date.now()), name: name, rankKey: rankKey });
     }
 
     if (!acquisitionsData[selectedMonth]) acquisitionsData[selectedMonth] = [];
@@ -755,121 +723,163 @@ async function saveMasterSettings() {
     }
   }
 
-// マスタ設定画面を開く
-function openMasterModal() {
-  renderMasterRankTable();
-  renderStaffManagerTable();
-  document.getElementById("masterModal").style.display = "flex";
-}
+  // マスタ設定関連
+  function openMasterModal() {
+    renderMasterRankTable();
+    renderStaffManagerTable();
+    document.getElementById("masterModal").style.display = "flex";
+  }
 
-// ランクマスタ表を描画
-function renderMasterRankTable() {
-  const tbodyMaster = document.getElementById("masterTableBody");
-  tbodyMaster.innerHTML = "";
-  rankMaster.forEach((m, idx) => {
-    tbodyMaster.innerHTML += `
-      <tr class="rank-row" data-key="${m.key}">
-        <td style="padding:4px; border:1px solid #ccc;">
-          <input type="text" class="rank-input-label" value="${m.label}" style="width:100%; padding:4px; box-sizing:border-box;">
-        </td>
-        <td style="padding:4px; border:1px solid #ccc;">
-          ¥ <input type="number" class="rank-input-rate" value="${m.rate}" style="width:70px; padding:4px;">
-        </td>
-        <td style="padding:4px; border:1px solid #ccc; text-align:center;">
-          <button class="btn-delete" onclick="deleteRankRow(this)">削除</button>
-        </td>
-      </tr>
+  function renderMasterRankTable() {
+    const tbodyMaster = document.getElementById("masterTableBody");
+    tbodyMaster.innerHTML = "";
+    rankMaster.forEach((m) => {
+      tbodyMaster.innerHTML += `
+        <tr class="rank-row" data-key="${m.key}">
+          <td style="padding:4px; border:1px solid #ccc;">
+            <input type="text" class="rank-input-label" value="${m.label}" style="width:100%; padding:4px; box-sizing:border-box;">
+          </td>
+          <td style="padding:4px; border:1px solid #ccc;">
+            ¥ <input type="number" class="rank-input-rate" value="${m.rate}" style="width:70px; padding:4px;">
+          </td>
+          <td style="padding:4px; border:1px solid #ccc; text-align:center;">
+            <button class="btn-delete" onclick="deleteRankRow(this)">削除</button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function addNewRankRow() {
+    const tbodyMaster = document.getElementById("masterTableBody");
+    const newKey = `rank_custom_${Date.now()}`;
+    const newRow = document.createElement("tr");
+    newRow.className = "rank-row";
+    newRow.setAttribute("data-key", newKey);
+    newRow.innerHTML = `
+      <td style="padding:4px; border:1px solid #ccc;">
+        <input type="text" class="rank-input-label" placeholder="ランク名を入力" style="width:100%; padding:4px; box-sizing:border-box;">
+      </td>
+      <td style="padding:4px; border:1px solid #ccc;">
+        ¥ <input type="number" class="rank-input-rate" value="500" style="width:70px; padding:4px;">
+      </td>
+      <td style="padding:4px; border:1px solid #ccc; text-align:center;">
+        <button class="btn-delete" onclick="deleteRankRow(this)">削除</button>
+      </td>
     `;
-  });
-}
-
-// 新規行を画面に追加（即時入力可能）
-function addNewRankRow() {
-  const tbodyMaster = document.getElementById("masterTableBody");
-  const newKey = `rank_custom_${Date.now()}`;
-  const newRow = document.createElement("tr");
-  newRow.className = "rank-row";
-  newRow.setAttribute("data-key", newKey);
-  newRow.innerHTML = `
-    <td style="padding:4px; border:1px solid #ccc;">
-      <input type="text" class="rank-input-label" placeholder="ランク名を入力" style="width:100%; padding:4px; box-sizing:border-box;">
-    </td>
-    <td style="padding:4px; border:1px solid #ccc;">
-      ¥ <input type="number" class="rank-input-rate" value="500" style="width:70px; padding:4px;">
-    </td>
-    <td style="padding:4px; border:1px solid #ccc; text-align:center;">
-      <button class="btn-delete" onclick="deleteRankRow(this)">削除</button>
-    </td>
-  `;
-  tbodyMaster.appendChild(newRow);
-}
-
-// 行の削除
-function deleteRankRow(btn) {
-  const tbody = document.getElementById("masterTableBody");
-  if (tbody.querySelectorAll("tr").length <= 1) {
-    alert("最低1つのランクが必要です。");
-    return;
+    tbodyMaster.appendChild(newRow);
   }
-  btn.closest("tr").remove();
-}
 
-// ランクマスタを画面から収集してGASへ送信・保存
-async function saveMasterSettings() {
-  const rows = document.querySelectorAll("#masterTableBody tr.rank-row");
-  const newRankList = [];
-
-  rows.forEach((row, idx) => {
-    const key = row.getAttribute("data-key") || `rank_${idx + 1}`;
-    const labelInput = row.querySelector(".rank-input-label");
-    const rateInput = row.querySelector(".rank-input-rate");
-
-    const label = labelInput ? labelInput.value.trim() : "";
-    const rate = rateInput ? parseInt(rateInput.value) : 0;
-
-    if (label) {
-      newRankList.push({
-        key: key,
-        label: label,
-        rate: isNaN(rate) ? 0 : rate
-      });
+  function deleteRankRow(btn) {
+    const tbody = document.getElementById("masterTableBody");
+    if (tbody.querySelectorAll("tr").length <= 1) {
+      alert("最低1つのランクが必要です。");
+      return;
     }
-  });
-
-  if (newRankList.length === 0) {
-    alert("ランク名を入力してください。");
-    return;
+    btn.closest("tr").remove();
   }
 
-  // ローカル変数を更新
-  rankMaster = newRankList;
-  refreshStaffUI();
-  renderRanking();
-  closeModal('masterModal');
+  function renderStaffManagerTable() {
+    const tbodyStaff = document.getElementById("staffManagerTableBody");
+    tbodyStaff.innerHTML = "";
+    staffList.forEach((s) => {
+      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定" };
+      tbodyStaff.innerHTML += `
+        <tr>
+          <td style="padding:6px; border:1px solid #ccc; font-weight:bold;">${s.name}</td>
+          <td style="padding:6px; border:1px solid #ccc;">${rank.label}</td>
+          <td style="padding:6px; border:1px solid #ccc; text-align:center;">
+            <button class="btn-delete" onclick="deleteStaff('${s.id}')">削除 (退職)</button>
+          </td>
+        </tr>
+      `;
+    });
+  }
 
-  // スプレッドシートへ送信
-  if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
-    try {
-      const res = await fetch(GAS_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "saveRankMaster",
-          rankMaster: rankMaster
-        })
-      });
-      const result = await res.json();
-      if (result.status === "success") {
-        alert("ランクマスタをスプレッドシートに保存・同期しました！");
+  async function deleteStaff(staffId) {
+    const target = staffList.find(s => String(s.id) === String(staffId));
+    if (target && confirm(`スタッフ「${target.name}」さんをマスターから削除しますか？`)) {
+      staffList = staffList.filter(s => String(s.id) !== String(staffId));
+      renderStaffManagerTable();
+      renderRanking();
+
+      if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
+        try {
+          await fetch(GAS_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "deleteStaff", staffId: staffId })
+          });
+        } catch (e) {
+          console.error("削除エラー:", e);
+        }
       }
-    } catch (e) {
-      console.error("マスタ同期エラー:", e);
-      alert("マスタ設定を保存しました（通信エラーのためローカルのみ反映）");
     }
-  } else {
-    alert("マスタ設定を保存しました（ローカル）");
   }
-}
+
+  // ランクマスタを画面から収集してGASへ送信・保存
+  async function saveMasterSettings() {
+    const saveBtn = document.getElementById("saveMasterBtn");
+    saveBtn.disabled = true;
+    saveBtn.innerText = "保存中...";
+
+    const rows = document.querySelectorAll("#masterTableBody tr.rank-row");
+    const newRankList = [];
+
+    rows.forEach((row, idx) => {
+      const key = row.getAttribute("data-key") || `rank_${idx + 1}`;
+      const labelInput = row.querySelector(".rank-input-label");
+      const rateInput = row.querySelector(".rank-input-rate");
+
+      const label = labelInput ? labelInput.value.trim() : "";
+      const rate = rateInput ? parseInt(rateInput.value) : 0;
+
+      if (label) {
+        newRankList.push({
+          key: key,
+          label: label,
+          rate: isNaN(rate) ? 0 : rate
+        });
+      }
+    });
+
+    if (newRankList.length === 0) {
+      alert("ランク名を入力してください。");
+      saveBtn.disabled = false;
+      saveBtn.innerText = "保存 / Save";
+      return;
+    }
+
+    rankMaster = newRankList;
+    refreshStaffUI();
+    renderRanking();
+    closeModal('masterModal');
+    saveBtn.disabled = false;
+    saveBtn.innerText = "保存 / Save";
+
+    if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "saveRankMaster",
+            rankMaster: rankMaster
+          })
+        });
+        const result = await res.json();
+        if (result.status === "success") {
+          alert("ランクマスタをスプレッドシートに保存・同期しました！");
+        }
+      } catch (e) {
+        console.error("マスタ同期エラー:", e);
+        alert("マスタ設定を保存しました（通信エラーのためローカルのみ反映）");
+      }
+    } else {
+      alert("マスタ設定を保存しました（ローカル）");
+    }
+  }
+
   // A4集計印刷
   function openPrintModal() {
     const ymParts = selectedMonth.split('-');
