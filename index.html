@@ -3,12 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>インセンティブ獲得状況管理アプリ</title>
-
-  <link rel="apple-touch-icon" href="famipay_incentive.jpg">
-  <link rel="icon" type="image/png" href="famipay_incentive.jpg">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  
+  <title>インセンティブ獲得 リアルタイム管理システム (FamiPay Management System)</title>
   <style>
     :root {
       --primary: #00a040;
@@ -29,7 +24,7 @@
       margin: 0 auto;
     }
 
-    /* Print Styles - Strictly Optimized for 1-Page A4 Sheet */
+    /* Print Styles */
     @media print {
       @page {
         size: A4 portrait;
@@ -242,7 +237,7 @@
     .form-group label { display: block; font-size: 0.82rem; font-weight: bold; margin-bottom: 4px; }
     .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 0.9rem; }
 
-    /* Printable Feedback Sheet Design (Screen Hidden by default) */
+    /* Printable Feedback Sheet Design */
     #printable-feedback {
       display: none;
       background: white;
@@ -256,22 +251,9 @@
       display: table;
       width: 100%;
     }
-    .fb-header-left {
-      display: table-cell;
-      vertical-align: bottom;
-    }
-    .fb-header-right {
-      display: table-cell;
-      text-align: right;
-      vertical-align: bottom;
-      font-size: 9.5pt;
-    }
-    .fb-title {
-      font-size: 16pt;
-      font-weight: bold;
-      color: #007bc7;
-      margin: 0 0 2px 0;
-    }
+    .fb-header-left { display: table-cell; vertical-align: bottom; }
+    .fb-header-right { display: table-cell; text-align: right; vertical-align: bottom; font-size: 9.5pt; }
+    .fb-title { font-size: 16pt; font-weight: bold; color: #007bc7; margin: 0 0 2px 0; }
     .fb-summary-banner {
       background-color: #f4fbf7;
       border: 1px solid #00a040;
@@ -294,16 +276,8 @@
       font-size: 9pt;
       text-align: center;
     }
-    .fb-table th {
-      background-color: #f2f2f2;
-      font-weight: bold;
-    }
-    .fb-footer-note {
-      font-size: 8pt;
-      color: #555;
-      text-align: right;
-      margin-top: 10px;
-    }
+    .fb-table th { background-color: #f2f2f2; font-weight: bold; }
+    .fb-footer-note { font-size: 8pt; color: #555; text-align: right; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -313,7 +287,7 @@
   <div class="header-card">
     <div class="title-group">
       <h1>🏆 インセンティブ獲得 リアルタイムボード<br><span style="font-size: 0.9rem; font-weight: normal; color: #555;">FamiPay Acquisition Management</span></h1>
-      <p>1ページで全員の実績・ランク・レシート証拠をリアルタイム管理<br><span style="font-size: 0.75rem; color: #777;">Real-time ranking, rank updates, and receipt verification on one page!</span></p>
+      <p>1ページで全員の実績・ランク・レシート証拠をリアルタイム管理</p>
     </div>
     <div class="btn-group">
       <button class="btn btn-primary" onclick="openUploadModal()">📷 レシート登録 / Add Receipt</button>
@@ -363,15 +337,13 @@
     
     <div class="form-group">
       <label>スタッフ名 / Staff Name</label>
-      <input type="text" id="staffNameInput" list="staffDatalist" placeholder="名前を入力または選択 / Type or select name" onchange="onStaffNameChange()">
+      <input type="text" id="staffNameInput" list="staffDatalist" placeholder="名前を入力または選択" onchange="onStaffNameChange()">
       <datalist id="staffDatalist"></datalist>
     </div>
 
     <div class="form-group">
       <label>SSTランク（★の数・単価） / Current SST Rank</label>
-      <select id="staffRankSelect">
-        <!-- JSでマスタから動的表示 -->
-      </select>
+      <select id="staffRankSelect"></select>
       <span style="font-size: 0.72rem; color: var(--accent);">※ランク昇格時はここで変更するとマスタ情報も自動上書きされます。</span>
     </div>
 
@@ -390,7 +362,7 @@
 
     <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
       <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('uploadModal')">キャンセル / Cancel</button>
-      <button class="btn btn-primary" style="padding: 8px 16px; border-radius: 6px;" onclick="submitAcquisition()">登録する / Submit</button>
+      <button class="btn btn-primary" id="submitBtn" style="padding: 8px 16px; border-radius: 6px;" onclick="submitAcquisition()">登録する / Submit</button>
     </div>
   </div>
 </div>
@@ -408,9 +380,7 @@
           <th style="padding:6px; border:1px solid #ccc;">支給単価 (円)</th>
         </tr>
       </thead>
-      <tbody id="masterTableBody">
-        <!-- JSで動的生成 -->
-      </tbody>
+      <tbody id="masterTableBody"></tbody>
     </table>
 
     <h4 style="margin:14px 0 6px 0; font-size:0.9rem; color:var(--secondary);">2. 登録スタッフ一覧・削除（退職処理）</h4>
@@ -422,9 +392,7 @@
           <th style="padding:6px; border:1px solid #ccc;">操作</th>
         </tr>
       </thead>
-      <tbody id="staffManagerTableBody">
-        <!-- JSで動的生成 -->
-      </tbody>
+      <tbody id="staffManagerTableBody"></tbody>
     </table>
 
     <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top:16px;">
@@ -438,12 +406,12 @@
 <div id="printable-feedback">
   <div class="fb-header-container">
     <div class="fb-header-left">
-      <h1 class="fb-title">インセンティブ獲得 月間全集計表</h1>
+      <h1 class="fb-title">インセンティブ新規獲得 月間全集計表</h1>
       <div style="font-size: 9pt; color: #555;">FamiPay Monthly Acquisition Full Report</div>
     </div>
     <div class="fb-header-right">
-      <b>対象月：</b><span id="fb-target-month">2026年7月</span><br>
-      <b>発行日：</b><span id="fb-issue-date">2026年8月4日</span>
+      <b>対象月：</b><span id="fb-target-month"></span><br>
+      <b>発行日：</b><span id="fb-issue-date"></span>
     </div>
   </div>
 
@@ -456,7 +424,6 @@
     </div>
   </div>
 
-  <!-- Full Staff Summary Table (Compact, strictly 1 A4 Page) -->
   <table class="fb-table">
     <thead>
       <tr>
@@ -469,9 +436,7 @@
         <th style="width: 14%;">見込支給額</th>
       </tr>
     </thead>
-    <tbody id="fb-table-body">
-      <!-- JSで動的生成 -->
-    </tbody>
+    <tbody id="fb-table-body"></tbody>
   </table>
 
   <div class="fb-footer-note">
@@ -480,92 +445,10 @@
 </div>
 
 <script>
+  // ★★★ GASのデプロイURLをここに設定してください ★★★
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyTlBLcWe-IGR2tHBZAbPetTpY_5sV5M8bIWRFhBo8x89wzzXWji-6tPa9knLHaOfY/exec";
 
-// ★★★ ここにデプロイしたGASのウェブアプリURLを貼り付けます ★★★
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyTlBLcWe-IGR2tHBZAbPetTpY_5sV5M8bIWRFhBo8x89wzzXWji-6tPa9knLHaOfY/exec";
-
-// 画面読み込み時にスプレッドシートからデータを取得
-async function loadDataFromSpreadsheet() {
-  try {
-    const res = await fetch(GAS_API_URL);
-    const data = await res.json();
-    if (data.staffList) staffList = data.staffList;
-    if (data.acquisitionsData) acquisitionsData = data.acquisitionsData;
-    
-    refreshStaffUI();
-    renderRanking();
-  } catch (e) {
-    console.error("データ取得エラー:", e);
-  }
-}
-
-// レシート登録時の送信処理（画像Base64変換含む）
-async function submitAcquisition() {
-  const name = document.getElementById("staffNameInput").value.trim();
-  const rankKey = document.getElementById("staffRankSelect").value;
-  const workType = document.getElementById("workType").value;
-  const fileInput = document.getElementById("receiptImg");
-
-  if (!name) {
-    alert("スタッフ名を入力してください / Please enter staff name");
-    return;
-  }
-
-  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  // 画像ファイルのBase64変換
-  let base64Img = "";
-  if (fileInput.files.length > 0) {
-    const file = fileInput.files[0];
-    base64Img = await new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(file);
-    });
-  }
-
-  // ローカル即時反映
-  let existingStaff = staffList.find(s => s.name === name);
-  if (existingStaff) existingStaff.rankKey = rankKey;
-  else staffList.push({ id: Date.now(), name: name, rankKey: rankKey });
-
-  if (!acquisitionsData[selectedMonth]) acquisitionsData[selectedMonth] = [];
-  acquisitionsData[selectedMonth].push({
-    staffName: name,
-    type: workType,
-    time: timeStr,
-    img: base64Img || "https://via.placeholder.com/150x100/333333/ffffff?text=Receipt"
-  });
-
-  renderRanking();
-  closeModal('uploadModal');
-  document.getElementById("staffNameInput").value = "";
-  fileInput.value = "";
-
-  // スプレッドシートへ送信
-  try {
-    await fetch(GAS_API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        action: "addAcquisition",
-        month: selectedMonth,
-        staffName: name,
-        rankKey: rankKey,
-        type: workType,
-        time: timeStr,
-        base64Img: base64Img
-      })
-    });
-  } catch (e) {
-    console.error("送信エラー:", e);
-  }
-}
-
-// 初期実行
-initMonthSelect();
-loadDataFromSpreadsheet();
-  
-  // 1. SST Master Definitions (Rates)
+  // SSTマスタ
   let sstMaster = [
     { key: "train", label: "トレーニング中", rate: 300 },
     { key: "staff", label: "★ スタッフ", rate: 500 },
@@ -573,18 +456,13 @@ loadDataFromSpreadsheet();
     { key: "subtrainer", label: "★★★ サブトレーナー", rate: 1000 }
   ];
 
-  // 2. Default Staff Master List
+  // デフォルトスタッフリスト（画面起動時に即表示されます）
   let staffList = [
     { id: 1, name: "店長", rankKey: "subtrainer" },
     { id: 2, name: "マネージャー", rankKey: "master" },
-    { id: 3, name: "オーナー", rankKey: "subtrainer" },
-    { id: 4, name: "サロジ", rankKey: "master" },
-    { id: 5, name: "山田", rankKey: "staff" },
-    { id: 6, name: "鈴木", rankKey: "subtrainer" },
-    { id: 7, name: "田中", rankKey: "train" }
+    { id: 3, name: "オーナー", rankKey: "subtrainer" }
   ];
 
-  // Helper for YYYY-MM
   function getYearMonthString(dateObj) {
     const y = dateObj.getFullYear();
     const m = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -593,30 +471,12 @@ loadDataFromSpreadsheet();
 
   const today = new Date();
   const currentYYYYMM = getYearMonthString(today);
-  let selectedMonth = "2026-07"; // Set demo default to July 2026
+  let selectedMonth = currentYYYYMM;
 
-  // Demo Acquisitions Data for 2026-07 (7月分)
-  let acquisitionsData = {
-    "2026-07": [
-      { staffName: "サロジ", type: "指示あり", time: "10:15", img: "https://via.placeholder.com/150x100/00a040/ffffff?text=Receipt" },
-      { staffName: "サロジ", type: "指示あり", time: "11:30", img: "https://via.placeholder.com/150x100/00a040/ffffff?text=Receipt" },
-      { staffName: "サロジ", type: "自発的", time: "14:20", img: "https://via.placeholder.com/150x100/00a040/ffffff?text=Receipt" },
-      { staffName: "サロジ", type: "自発的", time: "16:05", img: "https://via.placeholder.com/150x100/00a040/ffffff?text=Receipt" },
-      { staffName: "サロジ", type: "指示あり", time: "17:40", img: "https://via.placeholder.com/150x100/00a040/ffffff?text=Receipt" },
-      { staffName: "鈴木", type: "指示あり", time: "09:20", img: "https://via.placeholder.com/150x100/007bc7/ffffff?text=Receipt" },
-      { staffName: "鈴木", type: "指示あり", time: "12:15", img: "https://via.placeholder.com/150x100/007bc7/ffffff?text=Receipt" },
-      { staffName: "鈴木", type: "自発的", time: "15:10", img: "https://via.placeholder.com/150x100/007bc7/ffffff?text=Receipt" },
-      { staffName: "山田", type: "指示あり", time: "18:05", img: "https://via.placeholder.com/150x100/ff9800/ffffff?text=Receipt" },
-      { staffName: "山田", type: "自発的", time: "19:30", img: "https://via.placeholder.com/150x100/ff9800/ffffff?text=Receipt" },
-      { staffName: "マネージャー", type: "指示あり", time: "13:00", img: "https://via.placeholder.com/150x100/9c27b0/ffffff?text=Receipt" },
-      { staffName: "田中", type: "自発的", time: "20:10", img: "https://via.placeholder.com/150x100/607d8b/ffffff?text=Receipt" }
-    ],
-    "2026-08": [
-      { staffName: "店長", type: "指示あり", time: "10:00", img: "https://via.placeholder.com/150x100/00a040/ffffff?text=Receipt" }
-    ]
-  };
+  // 獲得データ保持用オブジェクト
+  let acquisitionsData = {};
 
-  // Init Month Dropdown
+  // 月選択の初期化
   function initMonthSelect() {
     const select = document.getElementById("monthSelect");
     select.innerHTML = "";
@@ -625,17 +485,17 @@ loadDataFromSpreadsheet();
       let d = new Date(today.getFullYear(), today.getMonth() - i, 1);
       let ym = getYearMonthString(d);
       let label = `${d.getFullYear()}年${d.getMonth()+1}月 (${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()})`;
-      if (ym === currentYYYYMM) label += " ★今月 / Current";
+      if (i === 0) label += " ★今月 / Current";
       
       let opt = document.createElement("option");
       opt.value = ym;
       opt.innerText = label;
       select.appendChild(opt);
     }
-    select.value = "2026-07"; // Select July for Demo
+    select.value = currentYYYYMM;
   }
 
-  // Refresh Staff UI
+  // スタッフUIの更新
   function refreshStaffUI() {
     const datalist = document.getElementById("staffDatalist");
     datalist.innerHTML = staffList.map(s => `<option value="${s.name}">`).join('');
@@ -652,7 +512,7 @@ loadDataFromSpreadsheet();
     }
   }
 
-  // Render Dashboard Table
+  // テーブル描画
   function renderRanking() {
     const records = acquisitionsData[selectedMonth] || [];
 
@@ -749,16 +609,54 @@ loadDataFromSpreadsheet();
     document.getElementById(id).style.display = "none";
   }
 
-  function submitAcquisition() {
+  // スプレッドシートからデータ取得
+  async function loadDataFromSpreadsheet() {
+    if (!GAS_API_URL || GAS_API_URL.includes("XXXXX")) return;
+    try {
+      const res = await fetch(GAS_API_URL);
+      const data = await res.json();
+      if (data.staffList && data.staffList.length > 0) {
+        staffList = data.staffList;
+      }
+      if (data.acquisitionsData) {
+        acquisitionsData = data.acquisitionsData;
+      }
+      refreshStaffUI();
+      renderRanking();
+    } catch (err) {
+      console.warn("GASデータ同期待機中（ローカルデータで動作中）:", err);
+    }
+  }
+
+  // レシート登録・送信
+  async function submitAcquisition() {
     const name = document.getElementById("staffNameInput").value.trim();
     const rankKey = document.getElementById("staffRankSelect").value;
     const workType = document.getElementById("workType").value;
+    const fileInput = document.getElementById("receiptImg");
+    const submitBtn = document.getElementById("submitBtn");
 
     if (!name) {
       alert("スタッフ名を入力してください / Please enter staff name");
       return;
     }
 
+    submitBtn.disabled = true;
+    submitBtn.innerText = "送信中...";
+
+    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    let base64Img = "";
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      base64Img = await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // ローカル即時反映
     let existingStaff = staffList.find(s => s.name === name);
     if (existingStaff) {
       existingStaff.rankKey = rankKey;
@@ -770,13 +668,37 @@ loadDataFromSpreadsheet();
     acquisitionsData[selectedMonth].push({
       staffName: name,
       type: workType,
-      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      img: "https://via.placeholder.com/150x100/333333/ffffff?text=New+Receipt"
+      time: timeStr,
+      img: base64Img || "https://via.placeholder.com/150x100/333333/ffffff?text=Receipt"
     });
 
     renderRanking();
     closeModal('uploadModal');
     document.getElementById("staffNameInput").value = "";
+    fileInput.value = "";
+    submitBtn.disabled = false;
+    submitBtn.innerText = "登録する / Submit";
+
+    // GASへPOST送信
+    if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
+      try {
+        await fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "addAcquisition",
+            month: selectedMonth,
+            staffName: name,
+            rankKey: rankKey,
+            type: workType,
+            time: timeStr,
+            base64Img: base64Img
+          })
+        });
+      } catch (err) {
+        console.error("GAS送信エラー:", err);
+      }
+    }
   }
 
   function openMasterModal() {
@@ -814,12 +736,24 @@ loadDataFromSpreadsheet();
     });
   }
 
-  function deleteStaff(staffId) {
+  async function deleteStaff(staffId) {
     const target = staffList.find(s => s.id === staffId);
     if (target && confirm(`スタッフ「${target.name}」さんをマスターから削除しますか？`)) {
       staffList = staffList.filter(s => s.id !== staffId);
       renderStaffManagerTable();
       renderRanking();
+
+      if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
+        try {
+          await fetch(GAS_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "deleteStaff", staffId: staffId })
+          });
+        } catch (e) {
+          console.error("削除エラー:", e);
+        }
+      }
     }
   }
 
@@ -833,7 +767,6 @@ loadDataFromSpreadsheet();
     alert("マスタ設定を保存しました / Saved!");
   }
 
-  // Print Function: Guarantees full list output formatted exactly for 1 A4 Page
   function openPrintModal() {
     const ymParts = selectedMonth.split('-');
     const formattedYM = `${ymParts[0]}年${parseInt(ymParts[1])}月`;
@@ -847,7 +780,6 @@ loadDataFromSpreadsheet();
     const tbody = document.getElementById("fb-table-body");
     tbody.innerHTML = "";
 
-    // Calculate full summary for ALL registered staff
     let staffSummary = staffList.map(s => {
       const sst = sstMaster.find(m => m.key === s.rankKey) || sstMaster[0];
       const myRecords = records.filter(r => r.staffName === s.name);
@@ -858,7 +790,6 @@ loadDataFromSpreadsheet();
       return { name: s.name, sstLabel: sst.label, rate: sst.rate, instructedCount, voluntaryCount, totalCount, totalAmount };
     });
 
-    // Sort by total acquisitions
     staffSummary.sort((a, b) => b.totalCount - a.totalCount);
 
     staffSummary.forEach((item, idx) => {
@@ -878,10 +809,11 @@ loadDataFromSpreadsheet();
     window.print();
   }
 
-  // Init
+  // 初期実行（即座にデフォルト表示し、その後GASと同期）
   initMonthSelect();
   refreshStaffUI();
   renderRanking();
+  loadDataFromSpreadsheet();
 </script>
 </body>
 </html>
