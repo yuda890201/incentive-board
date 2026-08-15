@@ -629,25 +629,60 @@
     document.getElementById(id).style.display = "none";
   }
 
-  // スプレッドシートからデータ取得
-  async function loadDataFromSpreadsheet() {
-    if (!GAS_API_URL || GAS_API_URL.includes("XXXXX")) return;
-    try {
-      const res = await fetch(GAS_API_URL);
-      const data = await res.json();
-      if (data.staffList && data.staffList.length > 0) {
-        staffList = data.staffList;
-      }
-      if (data.acquisitionsData) {
-        acquisitionsData = data.acquisitionsData;
-      }
-      refreshStaffUI();
-      renderRanking();
-    } catch (err) {
-      console.warn("GAS同期中（ローカルデータで動作）:", err);
+ // スプレッドシートから全データ取得（ランクマスタ含む）
+async function loadDataFromSpreadsheet() {
+  if (!GAS_API_URL || GAS_API_URL.includes("XXXXX")) return;
+  try {
+    const res = await fetch(GAS_API_URL);
+    const data = await res.json();
+    if (data.rankMaster && data.rankMaster.length > 0) {
+      rankMaster = data.rankMaster; // スプレッドシートのランクマスタを全端末で同期
     }
+    if (data.staffList && data.staffList.length > 0) {
+      staffList = data.staffList;
+    }
+    if (data.acquisitionsData) {
+      acquisitionsData = data.acquisitionsData;
+    }
+    refreshStaffUI();
+    renderRanking();
+  } catch (err) {
+    console.warn("GAS同期中:", err);
   }
+}
+  // ランクマスタ保存時にスプレッドシートへ送信
+async function saveMasterSettings() {
+  rankMaster.forEach((m, idx) => {
+    const labelInput = document.getElementById(`master-label-${idx}`);
+    const rateInput = document.getElementById(`master-rate-${idx}`);
+    if (labelInput && labelInput.value.trim()) m.label = labelInput.value.trim();
+    if (rateInput && !isNaN(parseInt(rateInput.value))) m.rate = parseInt(rateInput.value);
+  });
 
+  refreshStaffUI();
+  renderRanking();
+  closeModal('masterModal');
+
+  // スプレッドシートへランクマスタを保存
+  if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
+    try {
+      await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "saveRankMaster",
+          rankMaster: rankMaster
+        })
+      });
+      alert("マスタ設定を保存・全端末へ同期しました！");
+    } catch (e) {
+      console.error("マスタ同期エラー:", e);
+      alert("マスタ設定を保存しました（通信エラー）");
+    }
+  } else {
+    alert("マスタ設定を保存しました（ローカル）");
+  }
+}
   // レシート登録
   async function submitAcquisition() {
     const name = document.getElementById("staffNameInput").value.trim();
