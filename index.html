@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>インセンティブ獲得 リアルタイム管理システム (FamiPay Management System)</title>
+  <title>インセンティブ獲得 リアルタイム管理システム (Incentive Management System)</title>
   <style>
     :root {
       --primary: #00a040;
@@ -24,7 +24,7 @@
       margin: 0 auto;
     }
 
-    /* Print Styles */
+    /* Print Styles - A4 1 Page Layout */
     @media print {
       @page {
         size: A4 portrait;
@@ -171,7 +171,7 @@
     .rank-badge { font-weight: bold; font-size: 1.1rem; }
     .staff-info { text-align: left !important; }
     .staff-name { font-weight: bold; font-size: 0.92rem; display: block; }
-    .sst-tag { font-size: 0.72rem; color: #666; }
+    .rank-tag { font-size: 0.72rem; color: #666; }
     .reward-text { color: var(--accent); font-weight: bold; font-size: 0.95rem; }
     .btn-receipt {
       background: #e3f2fd;
@@ -229,13 +229,35 @@
       padding: 20px;
       border-radius: 12px;
       width: 90%;
-      max-width: 480px;
+      max-width: 520px;
       max-height: 85vh;
       overflow-y: auto;
     }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.82rem; font-weight: bold; margin-bottom: 4px; }
     .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 0.9rem; }
+
+    .btn-delete {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .btn-add {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px dashed #81c784;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+      margin-top: 4px;
+    }
 
     /* Printable Feedback Sheet Design */
     #printable-feedback {
@@ -286,7 +308,7 @@
   <!-- Header Card -->
   <div class="header-card">
     <div class="title-group">
-      <h1>🏆 インセンティブ獲得 リアルタイムボード<br><span style="font-size: 0.9rem; font-weight: normal; color: #555;">FamiPay Acquisition Management</span></h1>
+      <h1>🏆 インセンティブ獲得 リアルタイムボード<br><span style="font-size: 0.9rem; font-weight: normal; color: #555;">Incentive Acquisition Management</span></h1>
       <p>1ページで全員の実績・ランク・レシート証拠をリアルタイム管理</p>
     </div>
     <div class="btn-group">
@@ -300,9 +322,7 @@
   <div class="toolbar-card">
     <div class="month-select-group">
       <span>📅 表示月 / Month:</span>
-      <select id="monthSelect" onchange="changeMonth()">
-        <!-- JSで動的生成 -->
-      </select>
+      <select id="monthSelect" onchange="changeMonth()"></select>
     </div>
     <div style="font-size: 0.85rem; color: #555;">
       店舗合計 / Store Total: <b id="total-store-count" style="color: var(--primary); font-size: 1.1rem;">0</b> 件 (cases)
@@ -315,7 +335,7 @@
       <thead>
         <tr>
           <th style="width: 8%;">順位<br><span style="font-weight:normal; font-size:0.7rem;">Rank</span></th>
-          <th style="width: 30%;">名前 / SSTランク<br><span style="font-weight:normal; font-size:0.7rem;">Name / SST Rank</span></th>
+          <th style="width: 30%;">名前 / ランク<br><span style="font-weight:normal; font-size:0.7rem;">Name / Rank</span></th>
           <th style="width: 12%;">指示あり<br><span style="font-weight:normal; font-size:0.7rem;">Instructed</span></th>
           <th style="width: 12%;">自発的<br><span style="font-weight:normal; font-size:0.7rem;">Voluntary</span></th>
           <th style="width: 10%;">合計<br><span style="font-weight:normal; font-size:0.7rem;">Total</span></th>
@@ -323,9 +343,7 @@
           <th style="width: 12%;">証拠確認<br><span style="font-weight:normal; font-size:0.7rem;">Proof</span></th>
         </tr>
       </thead>
-      <tbody id="ranking-table-body">
-        <!-- JSで動的生成 -->
-      </tbody>
+      <tbody id="ranking-table-body"></tbody>
     </table>
   </div>
 </div>
@@ -342,7 +360,7 @@
     </div>
 
     <div class="form-group">
-      <label>SSTランク（★の数・単価） / Current SST Rank</label>
+      <label>スタッフランク（単価） / Current Rank</label>
       <select id="staffRankSelect"></select>
       <span style="font-size: 0.72rem; color: var(--accent);">※ランク昇格時はここで変更するとマスタ情報も自動上書きされます。</span>
     </div>
@@ -372,23 +390,25 @@
   <div class="modal-content">
     <h3>⚙️ マスタ＆スタッフ管理 / Master Settings</h3>
     
-    <h4 style="margin:10px 0 6px 0; font-size:0.9rem; color:var(--secondary);">1. SSTランク支給単価の設定</h4>
-    <table style="width:100%; font-size:0.82rem; border-collapse:collapse; margin-bottom:12px;">
+    <h4 style="margin:10px 0 6px 0; font-size:0.9rem; color:var(--secondary);">1. ランク名・支給単価の設定（追加・編集）</h4>
+    <table style="width:100%; font-size:0.82rem; border-collapse:collapse; margin-bottom:6px;">
       <thead>
         <tr style="background:#f0f0f0;">
-          <th style="padding:6px; border:1px solid #ccc;">SSTランク名</th>
-          <th style="padding:6px; border:1px solid #ccc;">支給単価 (円)</th>
+          <th style="padding:6px; border:1px solid #ccc; width:55%;">ランク名</th>
+          <th style="padding:6px; border:1px solid #ccc; width:30%;">単価 (円)</th>
+          <th style="padding:6px; border:1px solid #ccc; width:15%;">操作</th>
         </tr>
       </thead>
       <tbody id="masterTableBody"></tbody>
     </table>
+    <button class="btn-add" onclick="addNewRankRow()">+ 新しいランクを追加</button>
 
-    <h4 style="margin:14px 0 6px 0; font-size:0.9rem; color:var(--secondary);">2. 登録スタッフ一覧・削除（退職処理）</h4>
+    <h4 style="margin:16px 0 6px 0; font-size:0.9rem; color:var(--secondary);">2. 登録スタッフ一覧・削除（退職処理）</h4>
     <table style="width:100%; font-size:0.82rem; border-collapse:collapse; margin-bottom:12px;">
       <thead>
         <tr style="background:#f0f0f0;">
           <th style="padding:6px; border:1px solid #ccc;">スタッフ名</th>
-          <th style="padding:6px; border:1px solid #ccc;">現在のSSTランク</th>
+          <th style="padding:6px; border:1px solid #ccc;">現在のランク</th>
           <th style="padding:6px; border:1px solid #ccc;">操作</th>
         </tr>
       </thead>
@@ -407,7 +427,7 @@
   <div class="fb-header-container">
     <div class="fb-header-left">
       <h1 class="fb-title">インセンティブ新規獲得 月間全集計表</h1>
-      <div style="font-size: 9pt; color: #555;">FamiPay Monthly Acquisition Full Report</div>
+      <div style="font-size: 9pt; color: #555;">Incentive Monthly Acquisition Full Report</div>
     </div>
     <div class="fb-header-right">
       <b>対象月：</b><span id="fb-target-month"></span><br>
@@ -429,7 +449,7 @@
       <tr>
         <th style="width: 7%;">順位</th>
         <th style="width: 22%;">スタッフ名</th>
-        <th style="width: 28%;">SSTランク (単価)</th>
+        <th style="width: 28%;">ランク (単価)</th>
         <th style="width: 13%;">指示あり</th>
         <th style="width: 13%;">自発的</th>
         <th style="width: 8%;">合計</th>
@@ -448,19 +468,19 @@
   // ★★★ GASのデプロイURLをここに設定してください ★★★
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyTlBLcWe-IGR2tHBZAbPetTpY_5sV5M8bIWRFhBo8x89wzzXWji-6tPa9knLHaOfY/exec";
 
-  // SSTマスタ
-  let sstMaster = [
-    { key: "train", label: "トレーニング中", rate: 300 },
-    { key: "staff", label: "★ スタッフ", rate: 500 },
-    { key: "master", label: "★★ スター", rate: 700 },
-    { key: "subtrainer", label: "★★★ サブトレーナー", rate: 1000 }
+  // 1. ランクマスタ（自由に編集・追加可能）
+  let rankMaster = [
+    { key: "rank_1", label: "トレーニング中", rate: 300 },
+    { key: "rank_2", label: "スタッフ", rate: 500 },
+    { key: "rank_3", label: "マスター", rate: 700 },
+    { key: "rank_4", label: "サブトレーナー", rate: 1000 }
   ];
 
-  // デフォルトスタッフリスト（画面起動時に即表示されます）
+  // 2. デフォルトスタッフリスト
   let staffList = [
-    { id: 1, name: "店長", rankKey: "subtrainer" },
-    { id: 2, name: "マネージャー", rankKey: "master" },
-    { id: 3, name: "オーナー", rankKey: "subtrainer" }
+    { id: 1, name: "店長", rankKey: "rank_4" },
+    { id: 2, name: "マネージャー", rankKey: "rank_3" },
+    { id: 3, name: "オーナー", rankKey: "rank_4" }
   ];
 
   function getYearMonthString(dateObj) {
@@ -473,7 +493,7 @@
   const currentYYYYMM = getYearMonthString(today);
   let selectedMonth = currentYYYYMM;
 
-  // 獲得データ保持用オブジェクト
+  // 獲得データ保持用
   let acquisitionsData = {};
 
   // 月選択の初期化
@@ -501,7 +521,7 @@
     datalist.innerHTML = staffList.map(s => `<option value="${s.name}">`).join('');
 
     const rankSelect = document.getElementById("staffRankSelect");
-    rankSelect.innerHTML = sstMaster.map(m => `<option value="${m.key}">${m.label} - ¥${m.rate}</option>`).join('');
+    rankSelect.innerHTML = rankMaster.map(m => `<option value="${m.key}">${m.label} - ¥${m.rate}</option>`).join('');
   }
 
   function onStaffNameChange() {
@@ -517,18 +537,18 @@
     const records = acquisitionsData[selectedMonth] || [];
 
     let staffSummary = staffList.map(s => {
-      const sst = sstMaster.find(m => m.key === s.rankKey) || sstMaster[0];
+      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定", rate: 0 };
       const myRecords = records.filter(r => r.staffName === s.name);
       const instructedCount = myRecords.filter(r => r.type === "指示あり").length;
       const voluntaryCount = myRecords.filter(r => r.type === "自発的").length;
       const totalCount = myRecords.length;
-      const totalAmount = totalCount * sst.rate;
+      const totalAmount = totalCount * rank.rate;
 
       return {
         id: s.id,
         name: s.name,
-        sstLabel: sst.label,
-        rate: sst.rate,
+        rankLabel: rank.label,
+        rate: rank.rate,
         instructedCount,
         voluntaryCount,
         totalCount,
@@ -557,7 +577,7 @@
           <td class="rank-badge">${rankSymbol}</td>
           <td class="staff-info">
             <span class="staff-name">${item.name}</span>
-            <span class="sst-tag">${item.sstLabel} (@¥${item.rate})</span>
+            <span class="rank-tag">${item.rankLabel} (@¥${item.rate})</span>
           </td>
           <td>${item.instructedCount}</td>
           <td>${item.voluntaryCount}</td>
@@ -624,11 +644,11 @@
       refreshStaffUI();
       renderRanking();
     } catch (err) {
-      console.warn("GASデータ同期待機中（ローカルデータで動作中）:", err);
+      console.warn("GAS同期中（ローカルデータで動作）:", err);
     }
   }
 
-  // レシート登録・送信
+  // レシート登録
   async function submitAcquisition() {
     const name = document.getElementById("staffNameInput").value.trim();
     const rankKey = document.getElementById("staffRankSelect").value;
@@ -656,7 +676,6 @@
       });
     }
 
-    // ローカル即時反映
     let existingStaff = staffList.find(s => s.name === name);
     if (existingStaff) {
       existingStaff.rankKey = rankKey;
@@ -679,7 +698,6 @@
     submitBtn.disabled = false;
     submitBtn.innerText = "登録する / Submit";
 
-    // GASへPOST送信
     if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
       try {
         await fetch(GAS_API_URL, {
@@ -701,33 +719,61 @@
     }
   }
 
+  // マスタ設定関連（ランクの追加・編集・削除）
   function openMasterModal() {
+    renderMasterRankTable();
+    renderStaffManagerTable();
+    document.getElementById("masterModal").style.display = "flex";
+  }
+
+  function renderMasterRankTable() {
     const tbodyMaster = document.getElementById("masterTableBody");
     tbodyMaster.innerHTML = "";
-    sstMaster.forEach((m, idx) => {
+    rankMaster.forEach((m, idx) => {
       tbodyMaster.innerHTML += `
         <tr>
-          <td style="padding:6px; border:1px solid #ccc;">${m.label}</td>
-          <td style="padding:6px; border:1px solid #ccc;">
-            ¥ <input type="number" id="master-rate-${idx}" value="${m.rate}" style="width:80px; padding:4px;">
+          <td style="padding:4px; border:1px solid #ccc;">
+            <input type="text" id="master-label-${idx}" value="${m.label}" style="width:100%; padding:4px; box-sizing:border-box;">
+          </td>
+          <td style="padding:4px; border:1px solid #ccc;">
+            ¥ <input type="number" id="master-rate-${idx}" value="${m.rate}" style="width:70px; padding:4px;">
+          </td>
+          <td style="padding:4px; border:1px solid #ccc; text-align:center;">
+            <button class="btn-delete" onclick="deleteRank(${idx})">削除</button>
           </td>
         </tr>
       `;
     });
+  }
 
-    renderStaffManagerTable();
-    document.getElementById("masterModal").style.display = "flex";
+  function addNewRankRow() {
+    const newIdx = rankMaster.length + 1;
+    rankMaster.push({
+      key: `rank_custom_${Date.now()}`,
+      label: `新規ランク ${newIdx}`,
+      rate: 500
+    });
+    renderMasterRankTable();
+  }
+
+  function deleteRank(idx) {
+    if (rankMaster.length <= 1) {
+      alert("最低1つのランクが必要です。");
+      return;
+    }
+    rankMaster.splice(idx, 1);
+    renderMasterRankTable();
   }
 
   function renderStaffManagerTable() {
     const tbodyStaff = document.getElementById("staffManagerTableBody");
     tbodyStaff.innerHTML = "";
     staffList.forEach((s) => {
-      const sst = sstMaster.find(m => m.key === s.rankKey) || sstMaster[0];
+      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定" };
       tbodyStaff.innerHTML += `
         <tr>
           <td style="padding:6px; border:1px solid #ccc; font-weight:bold;">${s.name}</td>
-          <td style="padding:6px; border:1px solid #ccc;">${sst.label}</td>
+          <td style="padding:6px; border:1px solid #ccc;">${rank.label}</td>
           <td style="padding:6px; border:1px solid #ccc; text-align:center;">
             <button class="btn-delete" onclick="deleteStaff(${s.id})">削除 (退職)</button>
           </td>
@@ -758,15 +804,20 @@
   }
 
   function saveMasterSettings() {
-    sstMaster.forEach((m, idx) => {
-      const val = parseInt(document.getElementById(`master-rate-${idx}`).value);
-      if (!isNaN(val)) m.rate = val;
+    rankMaster.forEach((m, idx) => {
+      const labelInput = document.getElementById(`master-label-${idx}`);
+      const rateInput = document.getElementById(`master-rate-${idx}`);
+      if (labelInput && labelInput.value.trim()) m.label = labelInput.value.trim();
+      if (rateInput && !isNaN(parseInt(rateInput.value))) m.rate = parseInt(rateInput.value);
     });
+
+    refreshStaffUI();
     renderRanking();
     closeModal('masterModal');
-    alert("マスタ設定を保存しました / Saved!");
+    alert("マスタ設定を保存しました / Master settings saved!");
   }
 
+  // A4集計印刷
   function openPrintModal() {
     const ymParts = selectedMonth.split('-');
     const formattedYM = `${ymParts[0]}年${parseInt(ymParts[1])}月`;
@@ -781,13 +832,13 @@
     tbody.innerHTML = "";
 
     let staffSummary = staffList.map(s => {
-      const sst = sstMaster.find(m => m.key === s.rankKey) || sstMaster[0];
+      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定", rate: 0 };
       const myRecords = records.filter(r => r.staffName === s.name);
       const instructedCount = myRecords.filter(r => r.type === "指示あり").length;
       const voluntaryCount = myRecords.filter(r => r.type === "自発的").length;
       const totalCount = myRecords.length;
-      const totalAmount = totalCount * sst.rate;
-      return { name: s.name, sstLabel: sst.label, rate: sst.rate, instructedCount, voluntaryCount, totalCount, totalAmount };
+      const totalAmount = totalCount * rank.rate;
+      return { name: s.name, rankLabel: rank.label, rate: rank.rate, instructedCount, voluntaryCount, totalCount, totalAmount };
     });
 
     staffSummary.sort((a, b) => b.totalCount - a.totalCount);
@@ -797,7 +848,7 @@
         <tr>
           <td><b>${idx + 1}</b></td>
           <td style="text-align:left; font-weight:bold;">${item.name}</td>
-          <td style="text-align:left;">${item.sstLabel} (@¥${item.rate})</td>
+          <td style="text-align:left;">${item.rankLabel} (@¥${item.rate})</td>
           <td>${item.instructedCount} 件</td>
           <td>${item.voluntaryCount} 件</td>
           <td style="font-size:10pt;"><b>${item.totalCount} 件</b></td>
@@ -809,7 +860,7 @@
     window.print();
   }
 
-  // 初期実行（即座にデフォルト表示し、その後GASと同期）
+  // 初期実行
   initMonthSelect();
   refreshStaffUI();
   renderRanking();
