@@ -472,7 +472,7 @@
   let rankMaster = [
     { key: "rank_1", label: "トレーニング中", rate: 300 },
     { key: "rank_2", label: "スタッフ", rate: 500 },
-    { key: "rank_3", label: "マスター", rate: 700 },
+    { key: "rank_3", label: "スター", rate: 700 },
     { key: "rank_4", label: "サブトレーナー", rate: 1000 }
   ];
 
@@ -784,7 +784,7 @@
 
   async function deleteStaff(staffId) {
     const target = staffList.find(s => s.id === staffId);
-    if (target && confirm(`スタッフ「${target.name}」さんをマスターから削除しますか？`)) {
+    if (target && confirm(`スタッフ「${target.name}」さんをスターから削除しますか？`)) {
       staffList = staffList.filter(s => s.id !== staffId);
       renderStaffManagerTable();
       renderRanking();
