@@ -480,11 +480,96 @@
 </div>
 
 <script>
+
+// ★★★ ここにデプロイしたGASのウェブアプリURLを貼り付けます ★★★
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyTlBLcWe-IGR2tHBZAbPetTpY_5sV5M8bIWRFhBo8x89wzzXWji-6tPa9knLHaOfY/exec";
+
+// 画面読み込み時にスプレッドシートからデータを取得
+async function loadDataFromSpreadsheet() {
+  try {
+    const res = await fetch(GAS_API_URL);
+    const data = await res.json();
+    if (data.staffList) staffList = data.staffList;
+    if (data.acquisitionsData) acquisitionsData = data.acquisitionsData;
+    
+    refreshStaffUI();
+    renderRanking();
+  } catch (e) {
+    console.error("データ取得エラー:", e);
+  }
+}
+
+// レシート登録時の送信処理（画像Base64変換含む）
+async function submitAcquisition() {
+  const name = document.getElementById("staffNameInput").value.trim();
+  const rankKey = document.getElementById("staffRankSelect").value;
+  const workType = document.getElementById("workType").value;
+  const fileInput = document.getElementById("receiptImg");
+
+  if (!name) {
+    alert("スタッフ名を入力してください / Please enter staff name");
+    return;
+  }
+
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // 画像ファイルのBase64変換
+  let base64Img = "";
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    base64Img = await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ローカル即時反映
+  let existingStaff = staffList.find(s => s.name === name);
+  if (existingStaff) existingStaff.rankKey = rankKey;
+  else staffList.push({ id: Date.now(), name: name, rankKey: rankKey });
+
+  if (!acquisitionsData[selectedMonth]) acquisitionsData[selectedMonth] = [];
+  acquisitionsData[selectedMonth].push({
+    staffName: name,
+    type: workType,
+    time: timeStr,
+    img: base64Img || "https://via.placeholder.com/150x100/333333/ffffff?text=Receipt"
+  });
+
+  renderRanking();
+  closeModal('uploadModal');
+  document.getElementById("staffNameInput").value = "";
+  fileInput.value = "";
+
+  // スプレッドシートへ送信
+  try {
+    await fetch(GAS_API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "addAcquisition",
+        month: selectedMonth,
+        staffName: name,
+        rankKey: rankKey,
+        type: workType,
+        time: timeStr,
+        base64Img: base64Img
+      })
+    });
+  } catch (e) {
+    console.error("送信エラー:", e);
+  }
+}
+
+// 初期実行
+initMonthSelect();
+loadDataFromSpreadsheet();
+  
   // 1. SST Master Definitions (Rates)
   let sstMaster = [
     { key: "train", label: "トレーニング中", rate: 300 },
-    { key: "staff", label: "★ ファミマスタッフ", rate: 500 },
-    { key: "master", label: "★★ ファミマスター", rate: 700 },
+    { key: "staff", label: "★ スタッフ", rate: 500 },
+    { key: "master", label: "★★ スター", rate: 700 },
     { key: "subtrainer", label: "★★★ サブトレーナー", rate: 1000 }
   ];
 
