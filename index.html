@@ -650,8 +650,9 @@ async function loadDataFromSpreadsheet() {
     console.warn("GAS同期中:", err);
   }
 }
-  // ランクマスタ保存時にスプレッドシートへ送信
+// ランクマスタの保存・スプレッドシート同期処理
 async function saveMasterSettings() {
+  // 1. 画面の入力値を反映
   rankMaster.forEach((m, idx) => {
     const labelInput = document.getElementById(`master-label-${idx}`);
     const rateInput = document.getElementById(`master-rate-${idx}`);
@@ -663,7 +664,7 @@ async function saveMasterSettings() {
   renderRanking();
   closeModal('masterModal');
 
-  // スプレッドシートへランクマスタを保存
+  // 2. スプレッドシートへランクマスタを一括送信
   if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
     try {
       await fetch(GAS_API_URL, {
@@ -674,10 +675,10 @@ async function saveMasterSettings() {
           rankMaster: rankMaster
         })
       });
-      alert("マスタ設定を保存・全端末へ同期しました！");
+      alert("ランクマスタをスプレッドシートに保存・同期しました！");
     } catch (e) {
       console.error("マスタ同期エラー:", e);
-      alert("マスタ設定を保存しました（通信エラー）");
+      alert("マスタ設定をローカルに保存しました（通信エラー）");
     }
   } else {
     alert("マスタ設定を保存しました（ローカル）");
