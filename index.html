@@ -310,6 +310,7 @@
     <div class="title-group">
       <h1>🏆 インセンティブ獲得 リアルタイムボード<br><span style="font-size: 0.9rem; font-weight: normal; color: #555;">Incentive Acquisition Management</span></h1>
       <p>1ページで全員の実績・ランク・レシート証拠をリアルタイム管理</p>
+      <p id="syncStatus" style="font-size: 0.75rem; color: #999; margin-top: 2px;">🔌 接続確認中...</p>
     </div>
     <div class="btn-group">
       <button class="btn btn-primary" onclick="openUploadModal()">📷 レシート登録 / Add Receipt</button>
@@ -415,6 +416,16 @@
       <tbody id="staffManagerTableBody"></tbody>
     </table>
 
+    <div id="usageSection" style="display:none;">
+      <h4 style="margin:16px 0 6px 0; font-size:0.9rem; color:var(--secondary);">3. Firestore無料枠 使用量確認</h4>
+      <p style="font-size:0.75rem; color:#666; margin:0 0 6px 0;">
+        レシート画像はFirebase Storageではなく、圧縮した上でFirestore（無料のSparkプラン）に直接保存しています。
+        無料枠（データ容量 合計1GB）に対してあとどれくらい保存できそうか確認できます。
+      </p>
+      <button class="btn-add" id="checkUsageBtn" onclick="checkStorageUsage()">📊 使用量を確認する</button>
+      <div id="usageResult" style="font-size:0.82rem; margin-top:8px; line-height:1.6;"></div>
+    </div>
+
     <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top:16px;">
       <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('masterModal')">閉じる / Close</button>
       <button class="btn btn-primary" id="saveMasterBtn" style="padding: 8px 16px; border-radius: 6px;" onclick="saveMasterSettings()">保存 / Save</button>
@@ -464,10 +475,82 @@
   </div>
 </div>
 
-<script>
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyTlBLcWe-IGR2tHBZAbPetTpY_5sV5M8bIWRFhBo8x89wzzXWji-6tPa9knLHaOfY/exec";
+<!-- Firebase SDK (compat build: works with plain <script> tags, no bundler needed) -->
+<!-- Storage(Blazeプラン必須)は使わず、圧縮画像をFirestoreに直接保存するためStorage SDKは読み込みません -->
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
 
-  // 1. ランクマスタ
+<script>
+  // ============================================================
+  // Firebase 設定
+  // Firebase コンソール > プロジェクトの設定 > マイアプリ から取得した
+  // 設定オブジェクトをここに貼り付けてください。
+  // 未設定のままの場合はローカル（このブラウザ内のみ）動作にフォールバックします。
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyAcHjZFn_dPPaLDFINqXTZSR_gCpQWaack",
+    authDomain: "incentive-board.firebaseapp.com",
+    projectId: "incentive-board",
+    storageBucket: "incentive-board.firebasestorage.app",
+    messagingSenderId: "608905583870",
+    appId: "1:608905583870:web:c88e3f8ddf8aabc8cf59af",
+    measurementId: "G-78KFF9L4XK"
+  };
+
+  const firebaseEnabled = !!(firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_"));
+
+  let db = null;
+  let auth = null;
+
+  if (firebaseEnabled) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+  }
+
+  // Firestoreの1ドキュメント上限(1,048,576バイト)に収まるよう、
+  // レシート画像はこのバイト数を上限にリサイズ・圧縮してから保存します。
+  const MAX_IMAGE_DATA_URL_BYTES = 700 * 1024;
+
+  const PLACEHOLDER_IMG = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' fill='white' font-size='14' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+  // レシート画像をブラウザ内でリサイズ・JPEG圧縮し、Firestoreの1ドキュメント上限に収まるData URLにする
+  function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => { URL.revokeObjectURL(objectUrl); resolve(img); };
+      img.onerror = (e) => { URL.revokeObjectURL(objectUrl); reject(e); };
+      img.src = objectUrl;
+    });
+  }
+
+  async function compressImageToDataUrl(file, maxDimension = 900) {
+    const img = await loadImageFromFile(file);
+    const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    let quality = 0.7;
+    let dataUrl = canvas.toDataURL("image/jpeg", quality);
+    while (dataUrl.length > MAX_IMAGE_DATA_URL_BYTES && quality > 0.2) {
+      quality -= 0.15;
+      dataUrl = canvas.toDataURL("image/jpeg", quality);
+    }
+    if (dataUrl.length > MAX_IMAGE_DATA_URL_BYTES) {
+      canvas.width = Math.max(1, Math.round(canvas.width * 0.6));
+      canvas.height = Math.max(1, Math.round(canvas.height * 0.6));
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      dataUrl = canvas.toDataURL("image/jpeg", 0.4);
+    }
+    return dataUrl;
+  }
+
+  // 1. ランクマスタ（Firebase未設定時のローカル既定値）
   let rankMaster = [
     { key: "rank_1", label: "トレーニング中", rate: 300 },
     { key: "rank_2", label: "スタッフ", rate: 500 },
@@ -475,7 +558,7 @@
     { key: "rank_4", label: "サブトレーナー", rate: 1000 }
   ];
 
-  // 2. スタッフリスト
+  // 2. スタッフリスト（Firebase未設定時のローカル既定値）
   let staffList = [
     { id: "1", name: "店長", rankKey: "rank_4" },
     { id: "2", name: "マネージャー", rankKey: "rank_3" },
@@ -597,7 +680,7 @@
               ${item.myRecords.length === 0 ? '<span style="font-size:0.78rem; color:#999;">レシートなし / No receipts</span>' : ''}
               ${item.myRecords.map(r => `
                 <div class="receipt-item">
-                  <img src="${r.img}" alt="レシート">
+                  <img src="${r.image || PLACEHOLDER_IMG}" alt="レシート">
                   <div>${r.time} (${r.type === '指示あり' ? 'Paid' : 'Unpaid'})</div>
                 </div>
               `).join('')}
@@ -619,7 +702,11 @@
 
   function changeMonth() {
     selectedMonth = document.getElementById("monthSelect").value;
-    renderRanking();
+    if (firebaseEnabled) {
+      attachAcquisitionsListener(selectedMonth);
+    } else {
+      renderRanking();
+    }
   }
 
   function openUploadModal() {
@@ -630,25 +717,98 @@
     document.getElementById(id).style.display = "none";
   }
 
-  // スプレッドシートからデータ取得
-  async function loadDataFromSpreadsheet() {
-    if (!GAS_API_URL || GAS_API_URL.includes("XXXXX")) return;
-    try {
-      const res = await fetch(GAS_API_URL);
-      const data = await res.json();
-      if (data.rankMaster && data.rankMaster.length > 0) {
-        rankMaster = data.rankMaster;
-      }
-      if (data.staffList && data.staffList.length > 0) {
-        staffList = data.staffList;
-      }
-      if (data.acquisitionsData) {
-        acquisitionsData = data.acquisitionsData;
-      }
+  // ============================================================
+  // Firebase リアルタイム同期
+  // ============================================================
+  let unsubRankMaster = null;
+  let unsubStaff = null;
+  let unsubAcquisitions = null;
+
+  function setSyncStatus(state, message) {
+    const el = document.getElementById("syncStatus");
+    if (!el) return;
+    const icons = { ok: "🔥", off: "💾", error: "⚠️" };
+    el.textContent = `${icons[state] || ""} ${message}`;
+  }
+
+  async function seedRankMasterIfEmpty() {
+    const snap = await db.collection("rankMaster").get();
+    if (!snap.empty) return;
+    const batch = db.batch();
+    rankMaster.forEach((m, idx) => {
+      batch.set(db.collection("rankMaster").doc(m.key), { label: m.label, rate: m.rate, order: idx });
+    });
+    await batch.commit();
+  }
+
+  async function seedStaffIfEmpty() {
+    const snap = await db.collection("staff").get();
+    if (!snap.empty) return;
+    const batch = db.batch();
+    staffList.forEach((s) => {
+      batch.set(db.collection("staff").doc(s.id), { name: s.name, rankKey: s.rankKey });
+    });
+    await batch.commit();
+  }
+
+  function attachRankMasterListener() {
+    if (unsubRankMaster) unsubRankMaster();
+    unsubRankMaster = db.collection("rankMaster").orderBy("order").onSnapshot(snap => {
+      const list = snap.docs.map(d => ({ key: d.id, label: d.data().label, rate: d.data().rate }));
+      if (list.length > 0) rankMaster = list;
       refreshStaffUI();
       renderRanking();
+      if (document.getElementById("masterModal").style.display === "flex") {
+        renderMasterRankTable();
+        renderStaffManagerTable();
+      }
+    }, err => {
+      console.error("rankMaster同期エラー:", err);
+      setSyncStatus("error", "同期エラー");
+    });
+  }
+
+  function attachStaffListener() {
+    if (unsubStaff) unsubStaff();
+    unsubStaff = db.collection("staff").orderBy("name").onSnapshot(snap => {
+      staffList = snap.docs.map(d => ({ id: d.id, name: d.data().name, rankKey: d.data().rankKey }));
+      refreshStaffUI();
+      renderRanking();
+      if (document.getElementById("masterModal").style.display === "flex") {
+        renderStaffManagerTable();
+      }
+    }, err => {
+      console.error("staff同期エラー:", err);
+      setSyncStatus("error", "同期エラー");
+    });
+  }
+
+  function attachAcquisitionsListener(month) {
+    if (unsubAcquisitions) unsubAcquisitions();
+    unsubAcquisitions = db.collection("acquisitions")
+      .where("month", "==", month)
+      .onSnapshot(snap => {
+        acquisitionsData[month] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderRanking();
+      }, err => {
+        console.error("acquisitions同期エラー:", err);
+        setSyncStatus("error", "同期エラー");
+      });
+  }
+
+  async function initFirebaseSync() {
+    setSyncStatus("ok", "接続確認中...");
+    try {
+      await auth.signInAnonymously();
+      await seedRankMasterIfEmpty();
+      await seedStaffIfEmpty();
+      attachRankMasterListener();
+      attachStaffListener();
+      attachAcquisitionsListener(selectedMonth);
+      setSyncStatus("ok", "Firebase 連携中 (リアルタイム同期)");
     } catch (err) {
-      console.warn("GAS同期中:", err);
+      console.error("Firebase初期化エラー:", err);
+      setSyncStatus("error", "Firebase接続エラー（ローカルのみで動作）");
     }
   }
 
@@ -670,56 +830,62 @@
 
     const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-    let base64Img = "";
-    if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      base64Img = await new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-    }
-
-    let existingStaff = staffList.find(s => s.name === name);
-    if (existingStaff) {
-      existingStaff.rankKey = rankKey;
-    } else {
-      staffList.push({ id: String(Date.now()), name: name, rankKey: rankKey });
-    }
-
-    if (!acquisitionsData[selectedMonth]) acquisitionsData[selectedMonth] = [];
-    acquisitionsData[selectedMonth].push({
-      staffName: name,
-      type: workType,
-      time: timeStr,
-      img: base64Img || "https://via.placeholder.com/150x100/333333/ffffff?text=Receipt"
-    });
-
-    renderRanking();
-    closeModal('uploadModal');
-    document.getElementById("staffNameInput").value = "";
-    fileInput.value = "";
-    submitBtn.disabled = false;
-    submitBtn.innerText = "登録する / Submit";
-
-    if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
-      try {
-        await fetch(GAS_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "addAcquisition",
-            month: selectedMonth,
-            staffName: name,
-            rankKey: rankKey,
-            type: workType,
-            time: timeStr,
-            base64Img: base64Img
-          })
-        });
-      } catch (err) {
-        console.error("GAS送信エラー:", err);
+    try {
+      let image = "";
+      if (fileInput.files.length > 0) {
+        submitBtn.innerText = "画像を圧縮中...";
+        image = await compressImageToDataUrl(fileInput.files[0]);
       }
+      submitBtn.innerText = "送信中...";
+
+      if (firebaseEnabled) {
+        const existingStaff = staffList.find(s => s.name === name);
+        let staffId;
+        if (existingStaff) {
+          staffId = existingStaff.id;
+          await db.collection("staff").doc(staffId).set({ name, rankKey }, { merge: true });
+        } else {
+          const newDoc = await db.collection("staff").add({ name, rankKey });
+          staffId = newDoc.id;
+        }
+
+        await db.collection("acquisitions").add({
+          staffId,
+          staffName: name,
+          type: workType,
+          time: timeStr,
+          month: selectedMonth,
+          image,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        let existingStaff = staffList.find(s => s.name === name);
+        if (existingStaff) {
+          existingStaff.rankKey = rankKey;
+        } else {
+          staffList.push({ id: String(Date.now()), name: name, rankKey: rankKey });
+        }
+
+        if (!acquisitionsData[selectedMonth]) acquisitionsData[selectedMonth] = [];
+        acquisitionsData[selectedMonth].push({
+          staffName: name,
+          type: workType,
+          time: timeStr,
+          image
+        });
+
+        renderRanking();
+      }
+
+      closeModal('uploadModal');
+      document.getElementById("staffNameInput").value = "";
+      fileInput.value = "";
+    } catch (err) {
+      console.error("登録エラー:", err);
+      alert("登録に失敗しました。通信状況をご確認の上、再度お試しください。");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = "登録する / Submit";
     }
   }
 
@@ -727,7 +893,54 @@
   function openMasterModal() {
     renderMasterRankTable();
     renderStaffManagerTable();
+    document.getElementById("usageSection").style.display = firebaseEnabled ? "block" : "none";
+    document.getElementById("usageResult").innerHTML = "";
     document.getElementById("masterModal").style.display = "flex";
+  }
+
+  // Firestoreの無料枠(合計1GB)に対する使用量とレシート画像の推定保存可能枚数を確認する
+  async function checkStorageUsage() {
+    if (!firebaseEnabled) return;
+    const btn = document.getElementById("checkUsageBtn");
+    const resultEl = document.getElementById("usageResult");
+    btn.disabled = true;
+    btn.innerText = "集計中...";
+    resultEl.innerHTML = "";
+
+    try {
+      const snap = await db.collection("acquisitions").get();
+      let totalImageBytes = 0;
+      let imageCount = 0;
+      snap.forEach(docSnap => {
+        const img = docSnap.data().image;
+        if (img) {
+          totalImageBytes += img.length;
+          imageCount++;
+        }
+      });
+
+      const FREE_LIMIT_BYTES = 1024 * 1024 * 1024; // Firestore Sparkプラン 無料枠の目安(合計1GB)
+      const usedMB = (totalImageBytes / (1024 * 1024)).toFixed(1);
+      const usedPercent = ((totalImageBytes / FREE_LIMIT_BYTES) * 100).toFixed(2);
+      const avgPerImage = imageCount > 0 ? totalImageBytes / imageCount : 0;
+      const remainingImages = avgPerImage > 0
+        ? Math.max(0, Math.floor((FREE_LIMIT_BYTES - totalImageBytes) / avgPerImage))
+        : null;
+
+      resultEl.innerHTML = `
+        登録件数: <b>${snap.size}</b> 件（画像あり: <b>${imageCount}</b> 枚）<br>
+        画像の推定使用量: <b>${usedMB} MB</b> / 無料枠 約1024 MB（<b>${usedPercent}%</b>）<br>
+        ${remainingImages !== null
+          ? `現在の平均画像サイズ（約${Math.round(avgPerImage / 1024)}KB/枚）なら、あと約 <b>${remainingImages.toLocaleString()}枚</b> 保存できる見込みです。`
+          : "画像がまだ登録されていないため、保存可能枚数の見積もりはできません。"}
+      `;
+    } catch (e) {
+      console.error("使用量集計エラー:", e);
+      resultEl.innerHTML = `<span style="color:var(--accent);">使用量の取得に失敗しました。通信状況をご確認ください。</span>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "📊 使用量を確認する";
+    }
   }
 
   function renderMasterRankTable() {
@@ -799,25 +1012,23 @@
   async function deleteStaff(staffId) {
     const target = staffList.find(s => String(s.id) === String(staffId));
     if (target && confirm(`スタッフ「${target.name}」さんをマスターから削除しますか？`)) {
-      staffList = staffList.filter(s => String(s.id) !== String(staffId));
-      renderStaffManagerTable();
-      renderRanking();
-
-      if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
+      if (firebaseEnabled) {
         try {
-          await fetch(GAS_API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "deleteStaff", staffId: staffId })
-          });
+          await db.collection("staff").doc(String(staffId)).delete();
         } catch (e) {
           console.error("削除エラー:", e);
+          alert("削除に失敗しました。通信状況をご確認ください。");
+          return;
         }
+      } else {
+        staffList = staffList.filter(s => String(s.id) !== String(staffId));
+        renderStaffManagerTable();
+        renderRanking();
       }
     }
   }
 
-  // ランクマスタを画面から収集してGASへ送信・保存
+  // ランクマスタを画面から収集して保存
   async function saveMasterSettings() {
     const saveBtn = document.getElementById("saveMasterBtn");
     saveBtn.disabled = true;
@@ -850,33 +1061,32 @@
       return;
     }
 
-    rankMaster = newRankList;
-    refreshStaffUI();
-    renderRanking();
-    closeModal('masterModal');
-    saveBtn.disabled = false;
-    saveBtn.innerText = "保存 / Save";
-
-    if (GAS_API_URL && !GAS_API_URL.includes("XXXXX")) {
-      try {
-        const res = await fetch(GAS_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "saveRankMaster",
-            rankMaster: rankMaster
-          })
+    try {
+      if (firebaseEnabled) {
+        const existingSnap = await db.collection("rankMaster").get();
+        const newKeys = new Set(newRankList.map(r => r.key));
+        const batch = db.batch();
+        existingSnap.forEach(docSnap => {
+          if (!newKeys.has(docSnap.id)) batch.delete(docSnap.ref);
         });
-        const result = await res.json();
-        if (result.status === "success") {
-          alert("ランクマスタをスプレッドシートに保存・同期しました！");
-        }
-      } catch (e) {
-        console.error("マスタ同期エラー:", e);
-        alert("マスタ設定を保存しました（通信エラーのためローカルのみ反映）");
+        newRankList.forEach((r, idx) => {
+          batch.set(db.collection("rankMaster").doc(r.key), { label: r.label, rate: r.rate, order: idx });
+        });
+        await batch.commit();
+      } else {
+        rankMaster = newRankList;
+        refreshStaffUI();
+        renderRanking();
       }
-    } else {
-      alert("マスタ設定を保存しました（ローカル）");
+
+      closeModal('masterModal');
+      alert(firebaseEnabled ? "ランクマスタをFirebaseに保存・同期しました！" : "マスタ設定を保存しました（ローカル）");
+    } catch (e) {
+      console.error("マスタ同期エラー:", e);
+      alert("保存に失敗しました。通信状況をご確認の上、再度お試しください。");
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.innerText = "保存 / Save";
     }
   }
 
@@ -927,7 +1137,11 @@
   initMonthSelect();
   refreshStaffUI();
   renderRanking();
-  loadDataFromSpreadsheet();
+  if (firebaseEnabled) {
+    initFirebaseSync();
+  } else {
+    setSyncStatus("off", "ローカルのみ動作中（Firebase未設定）");
+  }
 </script>
 </body>
 </html>
