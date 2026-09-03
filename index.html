@@ -416,6 +416,16 @@
       <tbody id="staffManagerTableBody"></tbody>
     </table>
 
+    <div id="usageSection" style="display:none;">
+      <h4 style="margin:16px 0 6px 0; font-size:0.9rem; color:var(--secondary);">3. Firestore無料枠 使用量確認</h4>
+      <p style="font-size:0.75rem; color:#666; margin:0 0 6px 0;">
+        レシート画像はFirebase Storageではなく、圧縮した上でFirestore（無料のSparkプラン）に直接保存しています。
+        無料枠（データ容量 合計1GB）に対してあとどれくらい保存できそうか確認できます。
+      </p>
+      <button class="btn-add" id="checkUsageBtn" onclick="checkStorageUsage()">📊 使用量を確認する</button>
+      <div id="usageResult" style="font-size:0.82rem; margin-top:8px; line-height:1.6;"></div>
+    </div>
+
     <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top:16px;">
       <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('masterModal')">閉じる / Close</button>
       <button class="btn btn-primary" id="saveMasterBtn" style="padding: 8px 16px; border-radius: 6px;" onclick="saveMasterSettings()">保存 / Save</button>
@@ -466,10 +476,10 @@
 </div>
 
 <!-- Firebase SDK (compat build: works with plain <script> tags, no bundler needed) -->
+<!-- Storage(Blazeプラン必須)は使わず、圧縮画像をFirestoreに直接保存するためStorage SDKは読み込みません -->
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-storage-compat.js"></script>
 
 <script>
   // ============================================================
@@ -490,17 +500,54 @@
   const firebaseEnabled = !!(firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_"));
 
   let db = null;
-  let storage = null;
   let auth = null;
 
   if (firebaseEnabled) {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
-    storage = firebase.storage();
     auth = firebase.auth();
   }
 
+  // Firestoreの1ドキュメント上限(1,048,576バイト)に収まるよう、
+  // レシート画像はこのバイト数を上限にリサイズ・圧縮してから保存します。
+  const MAX_IMAGE_DATA_URL_BYTES = 700 * 1024;
+
   const PLACEHOLDER_IMG = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' fill='white' font-size='14' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+  // レシート画像をブラウザ内でリサイズ・JPEG圧縮し、Firestoreの1ドキュメント上限に収まるData URLにする
+  function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => { URL.revokeObjectURL(objectUrl); resolve(img); };
+      img.onerror = (e) => { URL.revokeObjectURL(objectUrl); reject(e); };
+      img.src = objectUrl;
+    });
+  }
+
+  async function compressImageToDataUrl(file, maxDimension = 900) {
+    const img = await loadImageFromFile(file);
+    const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    let quality = 0.7;
+    let dataUrl = canvas.toDataURL("image/jpeg", quality);
+    while (dataUrl.length > MAX_IMAGE_DATA_URL_BYTES && quality > 0.2) {
+      quality -= 0.15;
+      dataUrl = canvas.toDataURL("image/jpeg", quality);
+    }
+    if (dataUrl.length > MAX_IMAGE_DATA_URL_BYTES) {
+      canvas.width = Math.max(1, Math.round(canvas.width * 0.6));
+      canvas.height = Math.max(1, Math.round(canvas.height * 0.6));
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      dataUrl = canvas.toDataURL("image/jpeg", 0.4);
+    }
+    return dataUrl;
+  }
 
   // 1. ランクマスタ（Firebase未設定時のローカル既定値）
   let rankMaster = [
@@ -632,7 +679,7 @@
               ${item.myRecords.length === 0 ? '<span style="font-size:0.78rem; color:#999;">レシートなし / No receipts</span>' : ''}
               ${item.myRecords.map(r => `
                 <div class="receipt-item">
-                  <img src="${r.imageUrl || PLACEHOLDER_IMG}" alt="レシート">
+                  <img src="${r.image || PLACEHOLDER_IMG}" alt="レシート">
                   <div>${r.time} (${r.type === '指示あり' ? 'Paid' : 'Unpaid'})</div>
                 </div>
               `).join('')}
@@ -783,16 +830,14 @@
     const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
     try {
-      if (firebaseEnabled) {
-        let imageUrl = "";
-        if (fileInput.files.length > 0) {
-          const file = fileInput.files[0];
-          const path = `receipts/${selectedMonth}/${Date.now()}_${file.name}`;
-          const fileRef = storage.ref(path);
-          await fileRef.put(file);
-          imageUrl = await fileRef.getDownloadURL();
-        }
+      let image = "";
+      if (fileInput.files.length > 0) {
+        submitBtn.innerText = "画像を圧縮中...";
+        image = await compressImageToDataUrl(fileInput.files[0]);
+      }
+      submitBtn.innerText = "送信中...";
 
+      if (firebaseEnabled) {
         const existingStaff = staffList.find(s => s.name === name);
         let staffId;
         if (existingStaff) {
@@ -809,20 +854,10 @@
           type: workType,
           time: timeStr,
           month: selectedMonth,
-          imageUrl,
+          image,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       } else {
-        let base64Img = "";
-        if (fileInput.files.length > 0) {
-          const file = fileInput.files[0];
-          base64Img = await new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-          });
-        }
-
         let existingStaff = staffList.find(s => s.name === name);
         if (existingStaff) {
           existingStaff.rankKey = rankKey;
@@ -835,7 +870,7 @@
           staffName: name,
           type: workType,
           time: timeStr,
-          imageUrl: base64Img
+          image
         });
 
         renderRanking();
@@ -857,7 +892,54 @@
   function openMasterModal() {
     renderMasterRankTable();
     renderStaffManagerTable();
+    document.getElementById("usageSection").style.display = firebaseEnabled ? "block" : "none";
+    document.getElementById("usageResult").innerHTML = "";
     document.getElementById("masterModal").style.display = "flex";
+  }
+
+  // Firestoreの無料枠(合計1GB)に対する使用量とレシート画像の推定保存可能枚数を確認する
+  async function checkStorageUsage() {
+    if (!firebaseEnabled) return;
+    const btn = document.getElementById("checkUsageBtn");
+    const resultEl = document.getElementById("usageResult");
+    btn.disabled = true;
+    btn.innerText = "集計中...";
+    resultEl.innerHTML = "";
+
+    try {
+      const snap = await db.collection("acquisitions").get();
+      let totalImageBytes = 0;
+      let imageCount = 0;
+      snap.forEach(docSnap => {
+        const img = docSnap.data().image;
+        if (img) {
+          totalImageBytes += img.length;
+          imageCount++;
+        }
+      });
+
+      const FREE_LIMIT_BYTES = 1024 * 1024 * 1024; // Firestore Sparkプラン 無料枠の目安(合計1GB)
+      const usedMB = (totalImageBytes / (1024 * 1024)).toFixed(1);
+      const usedPercent = ((totalImageBytes / FREE_LIMIT_BYTES) * 100).toFixed(2);
+      const avgPerImage = imageCount > 0 ? totalImageBytes / imageCount : 0;
+      const remainingImages = avgPerImage > 0
+        ? Math.max(0, Math.floor((FREE_LIMIT_BYTES - totalImageBytes) / avgPerImage))
+        : null;
+
+      resultEl.innerHTML = `
+        登録件数: <b>${snap.size}</b> 件（画像あり: <b>${imageCount}</b> 枚）<br>
+        画像の推定使用量: <b>${usedMB} MB</b> / 無料枠 約1024 MB（<b>${usedPercent}%</b>）<br>
+        ${remainingImages !== null
+          ? `現在の平均画像サイズ（約${Math.round(avgPerImage / 1024)}KB/枚）なら、あと約 <b>${remainingImages.toLocaleString()}枚</b> 保存できる見込みです。`
+          : "画像がまだ登録されていないため、保存可能枚数の見積もりはできません。"}
+      `;
+    } catch (e) {
+      console.error("使用量集計エラー:", e);
+      resultEl.innerHTML = `<span style="color:var(--accent);">使用量の取得に失敗しました。通信状況をご確認ください。</span>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "📊 使用量を確認する";
+    }
   }
 
   function renderMasterRankTable() {
