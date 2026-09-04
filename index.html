@@ -4,17 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>インセンティブ獲得 リアルタイム管理システム (Incentive Management System)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #00a040;
-      --secondary: #007bc7;
-      --accent: #d9381e;
-      --bg: #f4f6f8;
-      --dark: #2c3e50;
+      --primary: #22c55e;
+      --primary-dark: #15803d;
+      --secondary: #6d5ce8;
+      --secondary-dark: #4c3fc9;
+      --accent: #f59e0b;
+      --accent-dark: #d97706;
+      --gold: #fbbf24;
+      --bronze: #cd7f32;
+      --silver: #9ca3af;
+      --bg: #eef1ff;
+      --dark: #322a6d;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-      background-color: var(--bg);
+      font-family: "M PLUS Rounded 1c", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: linear-gradient(160deg, #eef1ff 0%, #fdf1ff 45%, #eafff4 100%);
+      background-attachment: fixed;
       margin: 0;
       padding: 16px;
       color: #333;
@@ -65,26 +75,29 @@
 
     /* Header Card */
     .header-card {
-      background: white;
-      border-radius: 12px;
-      padding: 16px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      background: linear-gradient(135deg, var(--dark) 0%, var(--secondary-dark) 60%, var(--secondary) 100%);
+      border-radius: 16px;
+      padding: 18px 22px;
+      box-shadow: 0 6px 20px rgba(76, 63, 201, 0.35);
       margin-bottom: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
+      border: 2px solid rgba(255,255,255,0.15);
     }
     .title-group h1 {
       margin: 0;
-      font-size: 1.25rem;
-      color: var(--secondary);
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.25);
     }
     .title-group p {
       margin: 4px 0 0 0;
       font-size: 0.8rem;
-      color: #666;
+      color: rgba(255,255,255,0.85);
     }
     .btn-group {
       display: flex;
@@ -93,31 +106,33 @@
     }
     .btn {
       border: none;
-      padding: 10px 16px;
+      padding: 10px 18px;
       font-size: 0.88rem;
-      font-weight: bold;
-      border-radius: 20px;
+      font-weight: 800;
+      border-radius: 24px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: opacity 0.15s;
+      transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s;
     }
-    .btn:hover { opacity: 0.9; }
-    .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 3px 8px rgba(0,160,64,0.3); }
-    .btn-secondary { background-color: var(--secondary); color: white; }
-    .btn-dark { background-color: var(--dark); color: white; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: linear-gradient(135deg, #4ade80, var(--primary)); color: white; box-shadow: 0 4px 10px rgba(34,197,94,0.4); }
+    .btn-secondary { background: linear-gradient(135deg, #8b7cf6, var(--secondary)); color: white; box-shadow: 0 4px 10px rgba(109,92,232,0.4); }
+    .btn-dark { background: linear-gradient(135deg, #4c3fc9, var(--dark)); color: white; box-shadow: 0 4px 10px rgba(50,42,109,0.4); }
 
     /* Month Toolbar */
     .toolbar-card {
       background: white;
-      border-radius: 10px;
+      border-radius: 14px;
       padding: 12px 18px;
       margin-bottom: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      box-shadow: 0 3px 10px rgba(109,92,232,0.08);
+      border: 1px solid #e7e4ff;
       flex-wrap: wrap;
       gap: 10px;
     }
@@ -131,20 +146,21 @@
     .month-select-group select {
       padding: 6px 12px;
       border: 1.5px solid var(--secondary);
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 0.9rem;
       font-weight: bold;
-      color: var(--secondary);
-      background: #f0f7fc;
+      color: var(--secondary-dark);
+      background: #f2f0ff;
       cursor: pointer;
     }
 
     /* Main Ranking Card */
     .ranking-card {
       background: white;
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 16px rgba(109,92,232,0.1);
+      border: 1px solid #eeecff;
     }
 
     /* Table Styling */
@@ -154,30 +170,41 @@
       margin-top: 10px;
     }
     .rank-table th {
-      background-color: #f8f9fa;
-      color: #555;
+      background: linear-gradient(135deg, #f3f1ff, #eafaf1);
+      color: var(--secondary-dark);
       font-size: 0.8rem;
       padding: 10px 6px;
       text-align: center;
-      border-bottom: 2px solid #e0e0e0;
+      border-bottom: 2px solid #e0daff;
       line-height: 1.2;
     }
     .rank-table td {
       padding: 12px 6px;
       font-size: 0.88rem;
       text-align: center;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #f1f0fb;
     }
-    .rank-badge { font-weight: bold; font-size: 1.1rem; }
+    .rank-table tbody tr.rank-row-1 { background: linear-gradient(90deg, #fff9e6, #fffdf5); }
+    .rank-table tbody tr.rank-row-2 { background: linear-gradient(90deg, #f4f6fa, #fbfcfe); }
+    .rank-table tbody tr.rank-row-3 { background: linear-gradient(90deg, #fdf2e9, #fffaf5); }
+    .rank-badge { font-weight: 800; font-size: 1.15rem; }
     .staff-info { text-align: left !important; }
-    .staff-name { font-weight: bold; font-size: 0.92rem; display: block; }
-    .rank-tag { font-size: 0.72rem; color: #666; }
-    .reward-text { color: var(--accent); font-weight: bold; font-size: 0.95rem; }
+    .staff-name { font-weight: 800; font-size: 0.92rem; display: block; }
+    .rank-tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: bold;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-top: 2px;
+    }
+    .reward-text { color: var(--accent-dark); font-weight: 800; font-size: 0.95rem; }
     .btn-receipt {
-      background: #e3f2fd;
-      color: var(--secondary);
-      border: 1px solid #90caf9;
-      border-radius: 6px;
+      background: linear-gradient(135deg, #ede9fe, #e3f2fd);
+      color: var(--secondary-dark);
+      border: 1px solid #c4b8f5;
+      border-radius: 8px;
       padding: 4px 8px;
       font-size: 0.78rem;
       cursor: pointer;
@@ -227,67 +254,83 @@
     .modal-content {
       background: white;
       padding: 20px;
-      border-radius: 12px;
+      border-radius: 18px;
       width: 90%;
       max-width: 520px;
       max-height: 85vh;
       overflow-y: auto;
+      border: 2px solid #e7e2ff;
+      box-shadow: 0 12px 32px rgba(50,42,109,0.25);
     }
+    .modal-content h3 { margin-top: 0; color: var(--dark); }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.82rem; font-weight: bold; margin-bottom: 4px; }
-    .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 0.9rem; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 8px; border: 1.5px solid #ddd6ff; border-radius: 8px;
+      box-sizing: border-box; font-size: 0.9rem; font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus {
+      outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(109,92,232,0.15);
+    }
 
     .btn-delete {
       background: #ffebee;
       color: #c62828;
       border: 1px solid #ef9a9a;
-      border-radius: 4px;
+      border-radius: 8px;
       padding: 3px 8px;
       font-size: 0.75rem;
       cursor: pointer;
+      font-weight: bold;
     }
     .btn-add {
-      background: #e8f5e9;
-      color: #2e7d32;
-      border: 1px dashed #81c784;
-      border-radius: 4px;
-      padding: 6px 12px;
+      background: linear-gradient(135deg, #eafaf1, #e8f5e9);
+      color: #1b7a3d;
+      border: 2px dashed #6ee7a3;
+      border-radius: 8px;
+      padding: 7px 12px;
       font-size: 0.8rem;
       cursor: pointer;
       width: 100%;
-      font-weight: bold;
+      font-weight: 800;
       margin-top: 6px;
     }
+    .btn-add:hover { background: linear-gradient(135deg, #d8f7e4, #d4f0d6); }
 
-    /* Task Board & Contest Tabs */
+    /* Quest Board & Contest Tabs */
     .tc-tab-btn {
       flex: 1;
       padding: 8px 10px;
-      border: 1px solid #ddd;
-      background: #f5f5f5;
-      border-radius: 6px;
+      border: 1.5px solid #e2ddff;
+      background: #f7f6ff;
+      border-radius: 10px;
       font-size: 0.82rem;
-      font-weight: bold;
+      font-weight: 800;
       cursor: pointer;
-      color: #666;
+      color: #7a75a8;
+      font-family: inherit;
     }
     .tc-tab-btn.active {
-      background: var(--secondary);
+      background: linear-gradient(135deg, #8b7cf6, var(--secondary));
       color: white;
       border-color: var(--secondary);
+      box-shadow: 0 3px 8px rgba(109,92,232,0.35);
     }
     .tc-card {
       border: 1px solid #eee;
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 10px;
       margin-bottom: 8px;
+      background: #fffdfb;
+      transition: box-shadow 0.15s;
     }
+    .tc-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.07); }
     .tc-inline-form {
       display: none;
       margin-top: 8px;
-      background: #f9f9f9;
+      background: #f7f6ff;
       padding: 8px;
-      border-radius: 6px;
+      border-radius: 8px;
     }
 
     /* Printable Feedback Sheet Design */
@@ -345,7 +388,7 @@
     </div>
     <div class="btn-group">
       <button class="btn btn-primary" onclick="openUploadModal()">📷 レシート登録 / Add Receipt</button>
-      <button class="btn btn-secondary" onclick="openTaskCompModal()">🎯 タスク＆コンペ / Tasks & Contests</button>
+      <button class="btn btn-secondary" onclick="openTaskCompModal()">⚔️ クエスト＆コンペ / Quests & Contests</button>
       <button class="btn btn-secondary" onclick="openPrintModal()">🖨 A4集計結果を印刷 / Print A4 Summary</button>
       <button class="btn btn-dark" onclick="openMasterModal()">⚙️ スタッフ・マスタ管理 / Master Settings</button>
     </div>
@@ -468,20 +511,20 @@
 <!-- Task Board & Contest Modal -->
 <div class="modal no-print" id="taskCompModal">
   <div class="modal-content" style="max-width:640px;">
-    <h3>🎯 タスク掲示板 ＆ コンペ / Tasks & Contests</h3>
+    <h3>⚔️ クエストボード ＆ コンペ / Quests & Contests</h3>
 
     <div style="display:flex; gap:8px; margin-bottom:14px;">
-      <button class="tc-tab-btn active" data-tab="tasks" onclick="switchTcTab('tasks')">📋 タスク掲示板</button>
+      <button class="tc-tab-btn active" data-tab="tasks" onclick="switchTcTab('tasks')">📜 クエストボード</button>
       <button class="tc-tab-btn" data-tab="comps" onclick="switchTcTab('comps')">🎨 POP/SNSコンペ</button>
     </div>
 
     <div id="tcTab-tasks">
       <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
-        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいタスクを掲示</div>
-        <div class="form-group"><input type="text" id="taskTitleInput" placeholder="タスク名（例：POP作り直し）"></div>
+        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいクエストを発行</div>
+        <div class="form-group"><input type="text" id="taskTitleInput" placeholder="クエスト名（例：POP作り直し）"></div>
         <div class="form-group"><input type="text" id="taskDescInput" placeholder="内容・条件（任意）"></div>
         <div class="form-group"><input type="number" id="taskRewardInput" placeholder="報酬額（円）" min="0"></div>
-        <button class="btn-add" onclick="createTask()">掲示する</button>
+        <button class="btn-add" onclick="createTask()">発行する</button>
       </div>
       <div id="taskListArea"></div>
     </div>
@@ -674,6 +717,17 @@
     return 0;
   }
 
+  // ランクを「Lv.」バッジ風に彩るための色パレット（rankMaster内の並び順でループ）
+  const RANK_TIER_COLORS = ["#9ca3af", "#22c55e", "#6d5ce8", "#f59e0b", "#ec4899", "#0ea5e9"];
+  function getRankTierColor(rankKey) {
+    const idx = rankMaster.findIndex(m => m.key === rankKey);
+    return RANK_TIER_COLORS[idx >= 0 ? idx % RANK_TIER_COLORS.length : 0];
+  }
+  function getRankLevel(rankKey) {
+    const idx = rankMaster.findIndex(m => m.key === rankKey);
+    return idx >= 0 ? idx + 1 : 1;
+  }
+
   // 月選択の初期化
   function initMonthSelect() {
     const select = document.getElementById("monthSelect");
@@ -751,25 +805,30 @@
       storeTotal += item.totalCount;
 
       let rankSymbol = index + 1;
-      if (index === 0 && item.totalCount > 0) rankSymbol = "🥇 1";
-      else if (index === 1 && item.totalCount > 0) rankSymbol = "🥈 2";
-      else if (index === 2 && item.totalCount > 0) rankSymbol = "🥉 3";
+      let rowClass = "";
+      if (index === 0 && item.totalCount > 0) { rankSymbol = "🥇 1"; rowClass = "rank-row-1"; }
+      else if (index === 1 && item.totalCount > 0) { rankSymbol = "🥈 2"; rowClass = "rank-row-2"; }
+      else if (index === 2 && item.totalCount > 0) { rankSymbol = "🥉 3"; rowClass = "rank-row-3"; }
+
+      const staffMaster = staffList.find(s => s.id === item.id);
+      const tierColor = staffMaster ? getRankTierColor(staffMaster.rankKey) : "#9ca3af";
+      const level = staffMaster ? getRankLevel(staffMaster.rankKey) : 1;
 
       tbody.innerHTML += `
-        <tr>
+        <tr class="${rowClass}">
           <td class="rank-badge">${rankSymbol}</td>
           <td class="staff-info">
             <span class="staff-name">${item.name}</span>
-            <span class="rank-tag">${item.rankLabel} (@¥${item.rate})</span>
+            <span class="rank-tag" style="background:${tierColor};">Lv.${level} ${item.rankLabel} (@¥${item.rate})</span>
           </td>
           <td>${item.instructedCount}</td>
           <td>${item.voluntaryCount}</td>
           <td><b>${item.totalCount}</b></td>
           <td class="reward-text">
-            ¥${item.totalAmount.toLocaleString()}
+            💰¥${item.totalAmount.toLocaleString()}
             ${(item.taskReward > 0 || item.compReward > 0) ? `
               <div style="font-size:0.62rem; color:#888; font-weight:normal;">
-                ${item.taskReward > 0 ? `🎯タスク¥${item.taskReward.toLocaleString()} ` : ''}${item.compReward > 0 ? `🎨コンペ¥${item.compReward.toLocaleString()}` : ''}
+                ${item.taskReward > 0 ? `⚔️クエスト¥${item.taskReward.toLocaleString()} ` : ''}${item.compReward > 0 ? `🎨コンペ¥${item.compReward.toLocaleString()}` : ''}
               </div>
             ` : ''}
           </td>
@@ -809,8 +868,10 @@
   }
 
   // ============================================================
-  // タスク掲示板（低頻度タスクの成果報酬マッチング）
+  // クエストボード（低頻度タスクの成果報酬マッチング）
   // ============================================================
+  const QUEST_STATUS_COLOR = { open: "#f59e0b", claimed: "#6d5ce8", submitted: "#0ea5e9", approved: "#22c55e" };
+
   function getTaskRewardForStaff(staffId, month) {
     return tasksData
       .filter(t => t.status === "approved" && t.approvedMonth === month && t.claimedBy && t.claimedBy.staffId === staffId)
@@ -835,35 +896,36 @@
     let actionHtml = "";
     if (t.status === "open") {
       actionHtml = `
-        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="claimTask('${t.id}')">🙋 やります！</button>
+        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="claimTask('${t.id}')">⚔️ クエストを受注する！</button>
         <button class="btn-delete" onclick="cancelTask('${t.id}')">取消</button>
       `;
     } else if (t.status === "claimed") {
       actionHtml = `
-        <div style="font-size:0.78rem; color:#555; margin:4px 0;">担当: <b>${t.claimedBy ? t.claimedBy.staffName : "-"}</b></div>
-        <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleTaskForm('${t.id}')">✅ 完了報告</button>
+        <div style="font-size:0.78rem; color:#555; margin:4px 0;">挑戦者: <b>${t.claimedBy ? t.claimedBy.staffName : "-"}</b></div>
+        <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleTaskForm('${t.id}')">📮 達成報告</button>
         <button class="btn-delete" onclick="cancelTask('${t.id}')">取消</button>
         <div id="taskForm-${t.id}" class="tc-inline-form">
-          <div class="form-group"><input type="text" id="taskNote-${t.id}" placeholder="完了メモ（任意）"></div>
+          <div class="form-group"><input type="text" id="taskNote-${t.id}" placeholder="達成メモ（任意）"></div>
           <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">証拠写真（任意）</label><input type="file" id="taskImg-${t.id}" accept="image/*"></div>
           <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="submitTaskCompletion('${t.id}')">報告する</button>
         </div>
       `;
     } else if (t.status === "submitted") {
       actionHtml = `
-        <div style="font-size:0.78rem; color:#555; margin:4px 0;">担当: <b>${t.claimedBy ? t.claimedBy.staffName : "-"}</b>${t.submissionNote ? " / メモ: " + t.submissionNote : ""}</div>
-        ${t.submissionImage ? `<img src="${t.submissionImage}" style="max-width:120px; border-radius:6px; display:block; margin-bottom:6px;" alt="完了報告写真">` : ""}
+        <div style="font-size:0.78rem; color:#555; margin:4px 0;">挑戦者: <b>${t.claimedBy ? t.claimedBy.staffName : "-"}</b>${t.submissionNote ? " / メモ: " + t.submissionNote : ""}</div>
+        ${t.submissionImage ? `<img src="${t.submissionImage}" style="max-width:120px; border-radius:6px; display:block; margin-bottom:6px;" alt="達成報告写真">` : ""}
         <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="approveTask('${t.id}')">👍 承認する（報酬確定）</button>
       `;
     } else {
-      actionHtml = `<span style="font-size:0.78rem; color:var(--primary); font-weight:bold;">✅ 承認済み / 担当: ${t.claimedBy ? t.claimedBy.staffName : "-"}</span>`;
+      actionHtml = `<span style="font-size:0.78rem; color:var(--primary); font-weight:bold;">🏅 達成済み / 挑戦者: ${t.claimedBy ? t.claimedBy.staffName : "-"}</span>`;
     }
 
+    const borderColor = QUEST_STATUS_COLOR[t.status] || "#ddd";
     return `
-      <div class="tc-card">
+      <div class="tc-card" style="border-left: 4px solid ${borderColor};">
         <div style="display:flex; justify-content:space-between; align-items:baseline;">
           <b style="font-size:0.9rem;">${t.title}</b>
-          <span class="reward-text" style="font-size:0.85rem;">¥${(t.reward || 0).toLocaleString()}</span>
+          <span class="reward-text" style="font-size:0.85rem;">💰¥${(t.reward || 0).toLocaleString()}</span>
         </div>
         ${t.description ? `<div style="font-size:0.78rem; color:#666; margin:2px 0 6px 0;">${t.description}</div>` : ""}
         ${actionHtml}
@@ -883,18 +945,18 @@
       .slice(0, 8);
 
     area.innerHTML = `
-      <h4 style="font-size:0.82rem; color:var(--secondary); margin:8px 0 4px;">🟢 募集中 (${open.length})</h4>
-      ${open.length ? open.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">現在募集中のタスクはありません</div>'}
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:8px 0 4px;">📜 受注可能なクエスト (${open.length})</h4>
+      ${open.length ? open.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">現在受注できるクエストはありません</div>'}
 
-      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">🔧 対応中 (${claimed.length})</h4>
-      ${claimed.length ? claimed.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">対応中のタスクはありません</div>'}
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">⚔️ 挑戦中のクエスト (${claimed.length})</h4>
+      ${claimed.length ? claimed.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">挑戦中のクエストはありません</div>'}
 
-      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">📝 承認待ち (${submitted.length})</h4>
-      ${submitted.length ? submitted.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">承認待ちのタスクはありません</div>'}
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">📝 報告済み・承認待ち (${submitted.length})</h4>
+      ${submitted.length ? submitted.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">承認待ちのクエストはありません</div>'}
 
       <details style="margin-top:12px;">
-        <summary style="font-size:0.82rem; color:#666; cursor:pointer;">✅ 完了履歴（直近${approved.length}件）</summary>
-        ${approved.length ? approved.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999; margin-top:6px;">まだ完了したタスクはありません</div>'}
+        <summary style="font-size:0.82rem; color:#666; cursor:pointer;">🏅 達成履歴（直近${approved.length}件）</summary>
+        ${approved.length ? approved.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999; margin-top:6px;">まだ達成したクエストはありません</div>'}
       </details>
     `;
   }
@@ -909,7 +971,7 @@
     const description = document.getElementById("taskDescInput").value.trim();
     const reward = parseInt(document.getElementById("taskRewardInput").value);
 
-    if (!title) { alert("タスク名を入力してください"); return; }
+    if (!title) { alert("クエスト名を入力してください"); return; }
     if (!reward || reward <= 0) { alert("報酬額を入力してください"); return; }
 
     const newTask = {
@@ -924,8 +986,8 @@
       try {
         await db.collection("tasks").add({ ...newTask, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       } catch (e) {
-        console.error("タスク掲示エラー:", e);
-        alert("タスクの掲示に失敗しました。");
+        console.error("クエスト発行エラー:", e);
+        alert("クエストの発行に失敗しました。");
         return;
       }
     } else {
@@ -939,7 +1001,7 @@
   }
 
   async function claimTask(taskId) {
-    const input = prompt("担当者名を入力してください / Enter your name");
+    const input = prompt("受注者名を入力してください / Enter your name");
     if (!input || !input.trim()) return;
     const staffName = input.trim();
 
@@ -968,7 +1030,7 @@
         if (e.message === "ALREADY_CLAIMED") {
           alert("すでに他のスタッフが担当しています。");
         } else {
-          console.error("タスク担当登録エラー:", e);
+          console.error("クエスト受注エラー:", e);
           alert("担当登録に失敗しました。");
         }
       }
@@ -977,7 +1039,11 @@
       if (!task || task.status !== "open") { alert("すでに他のスタッフが担当しています。"); return; }
       let existingStaff = staffList.find(s => s.name === staffName);
       let staffId = existingStaff ? existingStaff.id : genLocalId();
-      if (!existingStaff) staffList.push({ id: staffId, name: staffName, rankKey: rankMaster[0] ? rankMaster[0].key : "" });
+      if (!existingStaff) {
+        staffList.push({ id: staffId, name: staffName, rankKey: rankMaster[0] ? rankMaster[0].key : "" });
+        refreshStaffUI();
+        renderRanking();
+      }
       task.status = "claimed";
       task.claimedBy = { staffId, staffName };
       task.claimedAt = new Date();
@@ -1019,7 +1085,7 @@
   }
 
   async function approveTask(taskId) {
-    if (!confirm("このタスクを承認し、報酬を確定しますか？")) return;
+    if (!confirm("このクエストを承認し、報酬を確定しますか？")) return;
     const month = getYearMonthString(new Date());
 
     if (firebaseEnabled) {
@@ -1030,7 +1096,7 @@
           approvedMonth: month
         });
       } catch (e) {
-        console.error("タスク承認エラー:", e);
+        console.error("クエスト承認エラー:", e);
         alert("承認に失敗しました。");
       }
     } else {
@@ -1046,12 +1112,12 @@
   }
 
   async function cancelTask(taskId) {
-    if (!confirm("このタスクを取り消しますか？")) return;
+    if (!confirm("このクエストを取り消しますか？")) return;
     if (firebaseEnabled) {
       try {
         await db.collection("tasks").doc(taskId).delete();
       } catch (e) {
-        console.error("タスク取消エラー:", e);
+        console.error("クエスト取消エラー:", e);
         alert("取消に失敗しました。");
       }
     } else {
@@ -1218,7 +1284,11 @@
     } else {
       let existingStaff = staffList.find(s => s.name === staffName);
       let staffId = existingStaff ? existingStaff.id : genLocalId();
-      if (!existingStaff) staffList.push({ id: staffId, name: staffName, rankKey: rankMaster[0] ? rankMaster[0].key : "" });
+      if (!existingStaff) {
+        staffList.push({ id: staffId, name: staffName, rankKey: rankMaster[0] ? rankMaster[0].key : "" });
+        refreshStaffUI();
+        renderRanking();
+      }
       competitionEntriesData.push({
         id: genLocalId(), competitionId: compId, competitionTitle: comp ? comp.title : "",
         staffId, staffName, entryType, image, link, comment,
