@@ -491,9 +491,35 @@
     <div class="ranking-card">
       <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
         <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいクエストを発行</div>
-        <div class="form-group"><input type="text" id="taskTitleInput" placeholder="クエスト名（例：POP作り直し）"></div>
+        <div class="form-group"><input type="text" id="taskTitleInput" placeholder="クエスト名（例：トイレ清掃）"></div>
         <div class="form-group"><input type="text" id="taskDescInput" placeholder="内容・条件（任意）"></div>
         <div class="form-group"><input type="number" id="taskRewardInput" placeholder="報酬額（円）" min="0"></div>
+
+        <div class="form-group">
+          <label>発注タイプ</label>
+          <div style="display:flex; flex-wrap:wrap; gap:14px; font-size:0.85rem; align-items:center;">
+            <label style="display:flex; align-items:center; gap:4px; font-weight:normal; white-space:nowrap;">
+              <input type="radio" name="taskRepeatMode" value="once" checked onchange="toggleRepeatIntervalField()"> 単発（履歴から再発注可）
+            </label>
+            <label style="display:flex; align-items:center; gap:4px; font-weight:normal; white-space:nowrap;">
+              <input type="radio" name="taskRepeatMode" value="recurring" onchange="toggleRepeatIntervalField()"> 🔁 繰り返し
+            </label>
+          </div>
+        </div>
+        <div class="form-group" id="repeatIntervalGroup" style="display:none;">
+          <label>クリアから何日後に再発注するか</label>
+          <input type="number" id="taskRepeatIntervalInput" placeholder="例：7（日）" min="1">
+        </div>
+
+        <div class="form-group">
+          <label>作業マニュアル（任意・清掃手順など）</label>
+          <textarea id="taskManualTextInput" rows="3" placeholder="手順・注意点など" style="width:100%; padding:8px; border:1.5px solid #ddd6ff; border-radius:8px; box-sizing:border-box; font-size:0.85rem; font-family:inherit;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>マニュアル画像（任意）</label>
+          <input type="file" id="taskManualImgInput" accept="image/*">
+        </div>
+
         <button class="btn-add" onclick="createTask()">発行する</button>
       </div>
       <div id="taskListArea"></div>
@@ -1068,7 +1094,7 @@
     });
     document.getElementById("backHomeBtn").style.display = name === "home" ? "none" : "inline-flex";
 
-    if (name === "quest") { renderTaskList(); }
+    if (name === "quest") { checkAndSpawnRecurringQuests(); renderTaskList(); }
     if (name === "comp") { renderCompetitionList(); }
     if (name === "acquisition") { renderRanking(); }
     if (name === "reward") { renderRewardRanking(); }
@@ -1099,20 +1125,57 @@
         <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="approveTask('${t.id}')">👍 承認する（報酬確定）</button>
       `;
     } else {
-      actionHtml = `<span style="font-size:0.78rem; color:var(--primary); font-weight:bold;">🏅 達成済み / 挑戦者: ${t.claimedBy ? t.claimedBy.staffName : "-"}</span>`;
+      // approved（達成済み）: 単発なら履歴から再発注、繰り返しなら次回自動発注日を表示
+      let repeatInfoHtml = "";
+      if (t.repeatMode === "recurring" && t.repeatIntervalDays) {
+        const approvedMs = toMillis(t.approvedAt);
+        if (t.spawnedNextTaskId) {
+          repeatInfoHtml = `<div style="font-size:0.72rem; color:#999; margin-top:4px;">🔁 次のクエストは発行済みです</div>`;
+        } else if (approvedMs) {
+          const dueDate = addDays(new Date(approvedMs), t.repeatIntervalDays).toLocaleDateString('ja-JP');
+          repeatInfoHtml = `<div style="font-size:0.72rem; color:#999; margin-top:4px;">🔁 ${dueDate} 頃に自動で再発注されます</div>`;
+        }
+      }
+      const reorderBtn = (t.repeatMode !== "recurring")
+        ? `<button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem; margin-top:6px;" onclick="reorderQuest('${t.id}')">🔁 再発注する</button>`
+        : "";
+      actionHtml = `
+        <span style="font-size:0.78rem; color:var(--primary); font-weight:bold;">🏅 達成済み / 挑戦者: ${t.claimedBy ? t.claimedBy.staffName : "-"}</span>
+        ${repeatInfoHtml}
+        ${reorderBtn}
+      `;
     }
+
+    const hasManual = t.manualText || t.manualImage;
+    const manualHtml = hasManual ? `
+      <button class="btn-receipt" style="margin-top:6px;" onclick="toggleQuestManual('${t.id}')">📖 マニュアルを見る</button>
+      <div id="manual-${t.id}" style="display:none; margin-top:6px; background:#f7f6ff; padding:8px; border-radius:8px; font-size:0.78rem;">
+        ${t.manualText ? `<div style="white-space:pre-wrap; margin-bottom:${t.manualImage ? '6px' : '0'};">${t.manualText}</div>` : ""}
+        ${t.manualImage ? `<img src="${t.manualImage}" style="max-width:100%; border-radius:6px;" alt="マニュアル画像">` : ""}
+      </div>
+    ` : "";
+
+    const repeatBadge = t.repeatMode === "recurring"
+      ? `<span style="font-size:0.65rem; background:#ede9fe; color:var(--secondary-dark); padding:2px 6px; border-radius:8px; margin-left:6px;">🔁 ${t.repeatIntervalDays}日ごと</span>`
+      : "";
 
     const borderColor = QUEST_STATUS_COLOR[t.status] || "#ddd";
     return `
       <div class="tc-card" style="border-left: 4px solid ${borderColor};">
         <div style="display:flex; justify-content:space-between; align-items:baseline;">
-          <b style="font-size:0.9rem;">${t.title}</b>
+          <b style="font-size:0.9rem;">${t.title}${repeatBadge}</b>
           <span class="reward-text" style="font-size:0.85rem;">💰¥${(t.reward || 0).toLocaleString()}</span>
         </div>
         ${t.description ? `<div style="font-size:0.78rem; color:#666; margin:2px 0 6px 0;">${t.description}</div>` : ""}
         ${actionHtml}
+        ${manualHtml}
       </div>
     `;
+  }
+
+  function toggleQuestManual(taskId) {
+    const el = document.getElementById(`manual-${taskId}`);
+    if (el) el.style.display = el.style.display === "block" ? "none" : "block";
   }
 
   function renderTaskList() {
@@ -1148,16 +1211,42 @@
     if (el) el.style.display = el.style.display === "block" ? "none" : "block";
   }
 
+  function toggleRepeatIntervalField() {
+    const mode = document.querySelector('input[name="taskRepeatMode"]:checked').value;
+    document.getElementById("repeatIntervalGroup").style.display = mode === "recurring" ? "block" : "none";
+  }
+
   async function createTask() {
     const title = document.getElementById("taskTitleInput").value.trim();
     const description = document.getElementById("taskDescInput").value.trim();
     const reward = parseInt(document.getElementById("taskRewardInput").value);
+    const repeatMode = document.querySelector('input[name="taskRepeatMode"]:checked').value;
+    const repeatIntervalDays = repeatMode === "recurring" ? parseInt(document.getElementById("taskRepeatIntervalInput").value) : null;
+    const manualText = document.getElementById("taskManualTextInput").value.trim();
+    const manualImgInput = document.getElementById("taskManualImgInput");
 
     if (!title) { alert("クエスト名を入力してください"); return; }
     if (!reward || reward <= 0) { alert("報酬額を入力してください"); return; }
+    if (repeatMode === "recurring" && (!repeatIntervalDays || repeatIntervalDays <= 0)) {
+      alert("再発注までの日数を入力してください");
+      return;
+    }
+
+    let manualImage = "";
+    if (manualImgInput.files.length > 0) {
+      manualImage = await compressImageToDataUrl(manualImgInput.files[0]);
+    }
+
+    // seriesId: 繰り返し発注で複製されても同じ系列とわかるよう、
+    // 最初のクエストのIDをそのまま系列IDとして引き継ぐ
+    const taskId = firebaseEnabled ? db.collection("tasks").doc().id : genLocalId();
 
     const newTask = {
       title, description, reward,
+      repeatMode, repeatIntervalDays: repeatMode === "recurring" ? repeatIntervalDays : null,
+      manualText, manualImage,
+      seriesId: taskId,
+      spawnedNextTaskId: null,
       status: "open",
       claimedBy: null, claimedAt: null,
       submissionNote: null, submissionImage: null, submittedAt: null,
@@ -1166,20 +1255,25 @@
 
     if (firebaseEnabled) {
       try {
-        await db.collection("tasks").add({ ...newTask, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        await db.collection("tasks").doc(taskId).set({ ...newTask, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       } catch (e) {
         console.error("クエスト発行エラー:", e);
         alert("クエストの発行に失敗しました。");
         return;
       }
     } else {
-      tasksData.push({ id: genLocalId(), ...newTask, createdAt: new Date() });
+      tasksData.push({ id: taskId, ...newTask, createdAt: new Date() });
       renderTaskList();
     }
 
     document.getElementById("taskTitleInput").value = "";
     document.getElementById("taskDescInput").value = "";
     document.getElementById("taskRewardInput").value = "";
+    document.getElementById("taskRepeatIntervalInput").value = "";
+    document.getElementById("taskManualTextInput").value = "";
+    manualImgInput.value = "";
+    document.querySelector('input[name="taskRepeatMode"][value="once"]').checked = true;
+    toggleRepeatIntervalField();
   }
 
   async function claimTask(taskId) {
@@ -1306,6 +1400,84 @@
       tasksData = tasksData.filter(t => t.id !== taskId);
       renderTaskList();
     }
+  }
+
+  function addDays(date, days) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  // 完了済みクエストを元に、同じ内容（マニュアル含む）の新しい「募集中」クエストを複製する
+  async function cloneQuestAsNew(sourceTask) {
+    const newTask = {
+      title: sourceTask.title,
+      description: sourceTask.description,
+      reward: sourceTask.reward,
+      repeatMode: sourceTask.repeatMode || "once",
+      repeatIntervalDays: sourceTask.repeatIntervalDays || null,
+      manualText: sourceTask.manualText || "",
+      manualImage: sourceTask.manualImage || "",
+      seriesId: sourceTask.seriesId || sourceTask.id,
+      spawnedNextTaskId: null,
+      status: "open",
+      claimedBy: null, claimedAt: null,
+      submissionNote: null, submissionImage: null, submittedAt: null,
+      approvedAt: null, approvedMonth: null
+    };
+
+    if (firebaseEnabled) {
+      const newId = db.collection("tasks").doc().id;
+      await db.collection("tasks").doc(newId).set({ ...newTask, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      await db.collection("tasks").doc(sourceTask.id).update({ spawnedNextTaskId: newId });
+      return newId;
+    } else {
+      const newId = genLocalId();
+      tasksData.push({ id: newId, ...newTask, createdAt: new Date() });
+      const original = tasksData.find(t => t.id === sourceTask.id);
+      if (original) original.spawnedNextTaskId = newId;
+      return newId;
+    }
+  }
+
+  // 単発クエストを履歴から手動で再発注する
+  async function reorderQuest(taskId) {
+    const source = tasksData.find(t => t.id === taskId);
+    if (!source) return;
+    if (!confirm(`「${source.title}」を同じ内容で再発注しますか？`)) return;
+    try {
+      await cloneQuestAsNew(source);
+      renderTaskList();
+    } catch (e) {
+      console.error("クエスト再発注エラー:", e);
+      alert("再発注に失敗しました。");
+    }
+  }
+
+  // 繰り返しクエスト：承認済み（クリア済み）から指定日数が経過したものを自動で再発注する
+  async function checkAndSpawnRecurringQuests() {
+    const now = Date.now();
+    const targets = tasksData.filter(t =>
+      t.status === "approved" &&
+      t.repeatMode === "recurring" &&
+      t.repeatIntervalDays &&
+      !t.spawnedNextTaskId &&
+      t.approvedAt
+    );
+
+    for (const t of targets) {
+      const approvedMs = toMillis(t.approvedAt);
+      if (!approvedMs) continue;
+      const dueAt = addDays(new Date(approvedMs), t.repeatIntervalDays).getTime();
+      if (now >= dueAt) {
+        try {
+          await cloneQuestAsNew(t);
+        } catch (e) {
+          console.error("繰り返しクエスト自動再発注エラー:", e);
+        }
+      }
+    }
+    if (!firebaseEnabled && targets.length > 0) renderTaskList();
   }
 
   // ============================================================
@@ -1637,6 +1809,7 @@
     if (unsubTasks) unsubTasks();
     unsubTasks = db.collection("tasks").orderBy("createdAt", "desc").onSnapshot(snap => {
       tasksData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      checkAndSpawnRecurringQuests();
       renderTaskList();
       renderRanking();
     }, err => {
@@ -2075,11 +2248,12 @@
 
       thead.innerHTML = `
         <tr>
-          <th style="width: 28%;">クエスト名</th>
-          <th style="width: 16%;">報酬額</th>
-          <th style="width: 16%;">ステータス</th>
-          <th style="width: 24%;">受注者</th>
-          <th style="width: 16%;">発行日</th>
+          <th style="width: 24%;">クエスト名</th>
+          <th style="width: 13%;">報酬額</th>
+          <th style="width: 13%;">ステータス</th>
+          <th style="width: 14%;">種別</th>
+          <th style="width: 22%;">受注者</th>
+          <th style="width: 14%;">発行日</th>
         </tr>
       `;
 
@@ -2088,11 +2262,13 @@
       sorted.forEach(t => {
         const createdMs = toMillis(t.createdAt);
         const created = createdMs ? new Date(createdMs).toLocaleDateString('ja-JP') : "-";
+        const typeLabel = t.repeatMode === "recurring" ? `🔁${t.repeatIntervalDays}日ごと` : "単発";
         tbody.innerHTML += `
           <tr>
             <td style="text-align:left; font-weight:bold;">${t.title}</td>
             <td>¥${(t.reward || 0).toLocaleString()}</td>
             <td>${statusLabel[t.status] || t.status}</td>
+            <td>${typeLabel}</td>
             <td>${t.claimedBy ? t.claimedBy.staffName : "-"}</td>
             <td>${created}</td>
           </tr>

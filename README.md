@@ -47,7 +47,7 @@ Firestoreのドキュメントに直接保存するため、クレジットカ�
 - `rankMaster/{rankKey}` — `{ label, rate, order }` ランク名・単価・表示順
 - `staff/{staffId}` — `{ name, rankKey }` スタッフ名と現在のランク
 - `acquisitions/{acquisitionId}` — `{ staffId, staffName, type, time, month, image, createdAt }` 獲得実績1件ごとのレコード
-- `tasks/{taskId}` — `{ title, description, reward, status, claimedBy, claimedAt, submissionNote, submissionImage, submittedAt, approvedAt, approvedMonth, createdAt }` タスク掲示板の1件ごとのレコード。`status` は `open`（募集中）→`claimed`（対応中）→`submitted`（承認待ち）→`approved`（承認済み・報酬確定）と遷移します
+- `tasks/{taskId}` — `{ title, description, reward, repeatMode, repeatIntervalDays, manualText, manualImage, seriesId, spawnedNextTaskId, status, claimedBy, claimedAt, submissionNote, submissionImage, submittedAt, approvedAt, approvedMonth, createdAt }` クエスト掲示板の1件ごとのレコード。`status` は `open`（受注可能）→`claimed`（挑戦中）→`submitted`（承認待ち）→`approved`（達成済み・報酬確定）と遷移します。`repeatMode` は `once`（単発）または `recurring`（繰り返し）
 - `competitions/{competitionId}` — `{ title, description, deadline, status, createdAt }` POP/SNSコンペの開催情報。`status` は `open` または `closed`
 - `competitionEntries/{entryId}` — `{ competitionId, competitionTitle, staffId, staffName, entryType, image, link, comment, isWinner, prizeAmount, resultMonth, submittedAt }` コンペへの応募1件ごとのレコード。`entryType` が `image` の場合は圧縮画像、`link` の場合はSNS/DriveなどのURLを保存します
 
@@ -69,9 +69,18 @@ Firestoreのドキュメントに直接保存するため、クレジットカ�
 留学生や社保の扶養に入っているスタッフなど、労働時間を抑えたいスタッフ向けに、
 時給に依存しない成果報酬型のインセンティブを追加できる機能です。
 
-- **クエスト**: マネージャーが低頻度タスク（POP作り直しなど）を報酬額付きで発行 →
+- **クエスト**: マネージャーが低頻度タスク（清掃など）を報酬額付きで発行 →
   スタッフが早い者勝ちで受注 → 達成報告（メモ＋任意で写真） → マネージャーが承認すると、
   その月の支給額に自動加算されます。
+  - **発注タイプ**: 「単発（履歴から再発注可）」または「🔁 繰り返し」を選択できます。
+    繰り返しの場合、クリア（承認）から指定日数が経過すると、同じ内容のクエストが自動的に
+    再発注されます（自動発注はクエストボードを開いたタイミングでチェックされます。無料の
+    Sparkプランのままcronサーバーを使わずに実現するため、サーバー側の定時実行ではなく
+    クライアント側でのチェックです）。単発クエストも達成履歴から手動で「🔁 再発注する」
+    ことができます。
+  - **作業マニュアル**: クエストごとに手順テキスト・参考画像を登録でき、募集中〜達成履歴の
+    どの状態でも「📖 マニュアルを見る」から閲覧できます。繰り返し・再発注時もマニュアルは
+    引き継がれます。
 - **POP/SNSコンペ**: マネージャーがコンペを開催 → スタッフが作品を応募（画像は圧縮してFirestoreに保存、
   動画やSNS投稿はURLで応募） → マネージャー/オーナーが優勝作品を選び賞金額を入力すると、
   その月の支給額に自動加算されます。Storageを使わない構成上、動画ファイル自体のアップロードには対応していません。
