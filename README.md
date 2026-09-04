@@ -47,11 +47,40 @@ Firestoreのドキュメントに直接保存するため、クレジットカ�
 - `rankMaster/{rankKey}` — `{ label, rate, order }` ランク名・単価・表示順
 - `staff/{staffId}` — `{ name, rankKey }` スタッフ名と現在のランク
 - `acquisitions/{acquisitionId}` — `{ staffId, staffName, type, time, month, image, createdAt }` 獲得実績1件ごとのレコード
+- `tasks/{taskId}` — `{ title, description, reward, status, claimedBy, claimedAt, submissionNote, submissionImage, submittedAt, approvedAt, approvedMonth, createdAt }` タスク掲示板の1件ごとのレコード。`status` は `open`（募集中）→`claimed`（対応中）→`submitted`（承認待ち）→`approved`（承認済み・報酬確定）と遷移します
+- `competitions/{competitionId}` — `{ title, description, deadline, status, createdAt }` POP/SNSコンペの開催情報。`status` は `open` または `closed`
+- `competitionEntries/{entryId}` — `{ competitionId, competitionTitle, staffId, staffName, entryType, image, link, comment, isWinner, prizeAmount, resultMonth, submittedAt }` コンペへの応募1件ごとのレコード。`entryType` が `image` の場合は圧縮画像、`link` の場合はSNS/DriveなどのURLを保存します
 
-`image` はレシート写真をリサイズ・JPEG圧縮したData URL文字列です。Firestoreの
+`image` はレシート写真・応募作品をリサイズ・JPEG圧縮したData URL文字列です。Firestoreの
 1ドキュメントあたり上限（約1MB）に収まるよう、必要に応じて自動的に画質・解像度を落とします。
+
+## 画面構成
+
+ホーム画面に4つの大きな入り口があり、それぞれ独立した画面に遷移します（各画面に専用の🖨印刷ボタンがあります）。
+「⚙️ スタッフ・マスタ管理」は右上の小さな歯車アイコンから開くモーダルとして残しています。
+
+- **⚔️ クエスト**: 低頻度タスクの成果報酬型マッチング（後述）
+- **🎨 コンペ**: POP/SNS作品コンテスト（後述）
+- **🧾 獲得表**: レシート投稿・スタッフごとの獲得件数を月別に集計（従来のメイン画面）
+- **🏆 報酬ランキング**: レシート報酬・クエスト報酬・コンペ賞金を合算した**累計支給額のみ**で順位付けする専用ランキング
+
+## クエスト / POP・SNSコンペ
+
+留学生や社保の扶養に入っているスタッフなど、労働時間を抑えたいスタッフ向けに、
+時給に依存しない成果報酬型のインセンティブを追加できる機能です。
+
+- **クエスト**: マネージャーが低頻度タスク（POP作り直しなど）を報酬額付きで発行 →
+  スタッフが早い者勝ちで受注 → 達成報告（メモ＋任意で写真） → マネージャーが承認すると、
+  その月の支給額に自動加算されます。
+- **POP/SNSコンペ**: マネージャーがコンペを開催 → スタッフが作品を応募（画像は圧縮してFirestoreに保存、
+  動画やSNS投稿はURLで応募） → マネージャー/オーナーが優勝作品を選び賞金額を入力すると、
+  その月の支給額に自動加算されます。Storageを使わない構成上、動画ファイル自体のアップロードには対応していません。
+
+「獲得表」「報酬ランキング」の両画面には、レシート実績による金額に加えて、承認済みクエストの報酬額・
+コンペの獲得賞金額が自動的に合算されます。「報酬ランキング」は合計支給額のみを順位付け基準にしており、
+件数（獲得表）とは独立したランキングです。
 
 ## 無料枠の使用量確認
 
-「⚙️ スタッフ・マスタ管理」モーダル内の「Firestore無料枠 使用量確認」から、
+「⚙️」アイコンから開く「スタッフ・マスタ管理」モーダル内の「Firestore無料枠 使用量確認」から、
 現在の登録件数・画像の推定使用容量・無料枠（合計1GB）に対する残り保存可能枚数の目安を確認できます。
