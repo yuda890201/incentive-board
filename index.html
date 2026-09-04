@@ -75,6 +75,7 @@
 
     /* Header Card */
     .header-card {
+      position: relative;
       background: linear-gradient(135deg, var(--dark) 0%, var(--secondary-dark) 60%, var(--secondary) 100%);
       border-radius: 16px;
       padding: 18px 22px;
@@ -121,6 +122,71 @@
     .btn-primary { background: linear-gradient(135deg, #4ade80, var(--primary)); color: white; box-shadow: 0 4px 10px rgba(34,197,94,0.4); }
     .btn-secondary { background: linear-gradient(135deg, #8b7cf6, var(--secondary)); color: white; box-shadow: 0 4px 10px rgba(109,92,232,0.4); }
     .btn-dark { background: linear-gradient(135deg, #4c3fc9, var(--dark)); color: white; box-shadow: 0 4px 10px rgba(50,42,109,0.4); }
+
+    /* Small corner icon button (Master Settings) */
+    .icon-btn {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.28); transform: rotate(25deg); }
+
+    /* Home Screen: 4 large entrance tiles */
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 6px;
+    }
+    @media (max-width: 560px) {
+      .home-grid { grid-template-columns: 1fr; }
+    }
+    .home-tile {
+      border-radius: 18px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 2px solid rgba(255,255,255,0.25);
+    }
+    .home-tile:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 24px rgba(0,0,0,0.18); }
+    .home-tile-icon { font-size: 2.6rem; margin-bottom: 6px; }
+    .home-tile-label { font-size: 1.15rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .home-tile-sub { font-size: 0.75rem; margin-top: 4px; color: rgba(255,255,255,0.9); }
+    .home-tile-quest { background: linear-gradient(135deg, #8b7cf6, var(--secondary-dark)); }
+    .home-tile-comp { background: linear-gradient(135deg, #f472b6, #db2777); }
+    .home-tile-acquisition { background: linear-gradient(135deg, #4ade80, var(--primary-dark)); }
+    .home-tile-reward { background: linear-gradient(135deg, var(--gold), var(--accent-dark)); }
+
+    /* Screen header (back arrow implied by header's home button; title + actions) */
+    .screen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .screen-header h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      color: var(--dark);
+      font-weight: 800;
+    }
 
     /* Month Toolbar */
     .toolbar-card {
@@ -381,46 +447,147 @@
 <div class="container no-print">
   <!-- Header Card -->
   <div class="header-card">
+    <button class="icon-btn" onclick="openMasterModal()" title="スタッフ・マスタ管理 / Master Settings">⚙️</button>
     <div class="title-group">
-      <h1>🏆 インセンティブ獲得 リアルタイムボード<br><span style="font-size: 0.9rem; font-weight: normal; color: #555;">Incentive Acquisition Management</span></h1>
+      <h1>🏆 インセンティブ獲得 リアルタイムボード<br><span style="font-size: 0.9rem; font-weight: normal; color: rgba(255,255,255,0.8);">Incentive Acquisition Management</span></h1>
       <p>1ページで全員の実績・ランク・レシート証拠をリアルタイム管理</p>
-      <p id="syncStatus" style="font-size: 0.75rem; color: #999; margin-top: 2px;">🔌 接続確認中...</p>
+      <p id="syncStatus" style="font-size: 0.75rem; color: rgba(255,255,255,0.75); margin-top: 2px;">🔌 接続確認中...</p>
     </div>
-    <div class="btn-group">
-      <button class="btn btn-primary" onclick="openUploadModal()">📷 レシート登録 / Add Receipt</button>
-      <button class="btn btn-secondary" onclick="openTaskCompModal()">⚔️ クエスト＆コンペ / Quests & Contests</button>
-      <button class="btn btn-secondary" onclick="openPrintModal()">🖨 A4集計結果を印刷 / Print A4 Summary</button>
-      <button class="btn btn-dark" onclick="openMasterModal()">⚙️ スタッフ・マスタ管理 / Master Settings</button>
+    <button class="btn btn-secondary no-print" id="backHomeBtn" onclick="showScreen('home')" style="display:none;">🏠 ホームに戻る</button>
+  </div>
+
+  <!-- Home Screen: 4 entrances -->
+  <div id="homeScreen" class="screen">
+    <div class="home-grid">
+      <div class="home-tile home-tile-quest" onclick="showScreen('quest')">
+        <div class="home-tile-icon">⚔️</div>
+        <div class="home-tile-label">クエスト</div>
+        <div class="home-tile-sub">低頻度タスクを成果報酬で受注</div>
+      </div>
+      <div class="home-tile home-tile-comp" onclick="showScreen('comp')">
+        <div class="home-tile-icon">🎨</div>
+        <div class="home-tile-label">コンペ</div>
+        <div class="home-tile-sub">POP・SNS作品コンテスト</div>
+      </div>
+      <div class="home-tile home-tile-acquisition" onclick="showScreen('acquisition')">
+        <div class="home-tile-icon">🧾</div>
+        <div class="home-tile-label">獲得表</div>
+        <div class="home-tile-sub">レシート投稿・獲得実績</div>
+      </div>
+      <div class="home-tile home-tile-reward" onclick="showScreen('reward')">
+        <div class="home-tile-icon">🏆</div>
+        <div class="home-tile-label">報酬ランキング</div>
+        <div class="home-tile-sub">累計支給額でランキング</div>
+      </div>
     </div>
   </div>
 
-  <!-- Month Toolbar -->
-  <div class="toolbar-card">
-    <div class="month-select-group">
-      <span>📅 表示月 / Month:</span>
-      <select id="monthSelect" onchange="changeMonth()"></select>
+  <!-- Quest Screen -->
+  <div id="questScreen" class="screen" style="display:none;">
+    <div class="screen-header">
+      <h2>⚔️ クエストボード</h2>
+      <button class="btn btn-secondary" onclick="printReport('quest')">🖨 印刷</button>
     </div>
-    <div style="font-size: 0.85rem; color: #555;">
-      店舗合計 / Store Total: <b id="total-store-count" style="color: var(--primary); font-size: 1.1rem;">0</b> 件 (cases)
+    <div class="ranking-card">
+      <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
+        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいクエストを発行</div>
+        <div class="form-group"><input type="text" id="taskTitleInput" placeholder="クエスト名（例：POP作り直し）"></div>
+        <div class="form-group"><input type="text" id="taskDescInput" placeholder="内容・条件（任意）"></div>
+        <div class="form-group"><input type="number" id="taskRewardInput" placeholder="報酬額（円）" min="0"></div>
+        <button class="btn-add" onclick="createTask()">発行する</button>
+      </div>
+      <div id="taskListArea"></div>
     </div>
   </div>
 
-  <!-- Ranking Table Card -->
-  <div class="ranking-card">
-    <table class="rank-table">
-      <thead>
-        <tr>
-          <th style="width: 8%;">順位<br><span style="font-weight:normal; font-size:0.7rem;">Rank</span></th>
-          <th style="width: 30%;">名前 / ランク<br><span style="font-weight:normal; font-size:0.7rem;">Name / Rank</span></th>
-          <th style="width: 12%;">指示あり<br><span style="font-weight:normal; font-size:0.7rem;">Instructed</span></th>
-          <th style="width: 12%;">自発的<br><span style="font-weight:normal; font-size:0.7rem;">Voluntary</span></th>
-          <th style="width: 10%;">合計<br><span style="font-weight:normal; font-size:0.7rem;">Total</span></th>
-          <th style="width: 16%;">見込支給額<br><span style="font-weight:normal; font-size:0.7rem;">Est. Incentive</span></th>
-          <th style="width: 12%;">証拠確認<br><span style="font-weight:normal; font-size:0.7rem;">Proof</span></th>
-        </tr>
-      </thead>
-      <tbody id="ranking-table-body"></tbody>
-    </table>
+  <!-- Contest Screen -->
+  <div id="compScreen" class="screen" style="display:none;">
+    <div class="screen-header">
+      <h2>🎨 POP/SNSコンペ</h2>
+      <button class="btn btn-secondary" onclick="printReport('comp')">🖨 印刷</button>
+    </div>
+    <div class="ranking-card">
+      <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
+        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいコンペを開催</div>
+        <div class="form-group"><input type="text" id="compTitleInput" placeholder="コンペ名（例：秋のPOPデザイン）"></div>
+        <div class="form-group"><input type="text" id="compDescInput" placeholder="テーマ・条件（任意）"></div>
+        <div class="form-group"><input type="date" id="compDeadlineInput"></div>
+        <button class="btn-add" onclick="createCompetition()">開催する</button>
+      </div>
+      <div id="compListArea"></div>
+    </div>
+  </div>
+
+  <!-- Acquisition Screen (獲得表 / レシート投稿) -->
+  <div id="acquisitionScreen" class="screen" style="display:none;">
+    <div class="screen-header">
+      <h2>🧾 獲得表</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-primary" onclick="openUploadModal()">📷 レシート登録</button>
+        <button class="btn btn-secondary" onclick="printReport('acquisition')">🖨 印刷</button>
+      </div>
+    </div>
+
+    <div class="toolbar-card">
+      <div class="month-select-group">
+        <span>📅 表示月 / Month:</span>
+        <select id="monthSelect" onchange="changeMonth(this)"></select>
+      </div>
+      <div style="font-size: 0.85rem; color: #555;">
+        店舗合計 / Store Total: <b id="total-store-count" style="color: var(--primary); font-size: 1.1rem;">0</b> 件 (cases)
+      </div>
+    </div>
+
+    <div class="ranking-card">
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th style="width: 8%;">順位<br><span style="font-weight:normal; font-size:0.7rem;">Rank</span></th>
+            <th style="width: 30%;">名前 / ランク<br><span style="font-weight:normal; font-size:0.7rem;">Name / Rank</span></th>
+            <th style="width: 12%;">指示あり<br><span style="font-weight:normal; font-size:0.7rem;">Instructed</span></th>
+            <th style="width: 12%;">自発的<br><span style="font-weight:normal; font-size:0.7rem;">Voluntary</span></th>
+            <th style="width: 10%;">合計<br><span style="font-weight:normal; font-size:0.7rem;">Total</span></th>
+            <th style="width: 16%;">見込支給額<br><span style="font-weight:normal; font-size:0.7rem;">Est. Incentive</span></th>
+            <th style="width: 12%;">証拠確認<br><span style="font-weight:normal; font-size:0.7rem;">Proof</span></th>
+          </tr>
+        </thead>
+        <tbody id="ranking-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Reward Ranking Screen (報酬ランキング：累計金額のみで順位付け) -->
+  <div id="rewardScreen" class="screen" style="display:none;">
+    <div class="screen-header">
+      <h2>🏆 報酬ランキング</h2>
+      <button class="btn btn-secondary" onclick="printReport('reward')">🖨 印刷</button>
+    </div>
+
+    <div class="toolbar-card">
+      <div class="month-select-group">
+        <span>📅 表示月 / Month:</span>
+        <select id="monthSelectReward" onchange="changeMonth(this)"></select>
+      </div>
+      <div style="font-size: 0.85rem; color: #555;">
+        店舗合計支給額 / Total Payout: <b id="total-store-payout" style="color: var(--accent-dark); font-size: 1.1rem;">¥0</b>
+      </div>
+    </div>
+
+    <div class="ranking-card">
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th style="width: 10%;">順位<br><span style="font-weight:normal; font-size:0.7rem;">Rank</span></th>
+            <th style="width: 28%;">名前 / ランク<br><span style="font-weight:normal; font-size:0.7rem;">Name / Rank</span></th>
+            <th style="width: 18%;">レシート報酬<br><span style="font-weight:normal; font-size:0.7rem;">Receipts</span></th>
+            <th style="width: 18%;">クエスト報酬<br><span style="font-weight:normal; font-size:0.7rem;">Quests</span></th>
+            <th style="width: 18%;">コンペ賞金<br><span style="font-weight:normal; font-size:0.7rem;">Contests</span></th>
+            <th style="width: 18%;">合計支給額<br><span style="font-weight:normal; font-size:0.7rem;">Total</span></th>
+          </tr>
+        </thead>
+        <tbody id="reward-ranking-table-body"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -508,50 +675,12 @@
   </div>
 </div>
 
-<!-- Task Board & Contest Modal -->
-<div class="modal no-print" id="taskCompModal">
-  <div class="modal-content" style="max-width:640px;">
-    <h3>⚔️ クエストボード ＆ コンペ / Quests & Contests</h3>
-
-    <div style="display:flex; gap:8px; margin-bottom:14px;">
-      <button class="tc-tab-btn active" data-tab="tasks" onclick="switchTcTab('tasks')">📜 クエストボード</button>
-      <button class="tc-tab-btn" data-tab="comps" onclick="switchTcTab('comps')">🎨 POP/SNSコンペ</button>
-    </div>
-
-    <div id="tcTab-tasks">
-      <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
-        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいクエストを発行</div>
-        <div class="form-group"><input type="text" id="taskTitleInput" placeholder="クエスト名（例：POP作り直し）"></div>
-        <div class="form-group"><input type="text" id="taskDescInput" placeholder="内容・条件（任意）"></div>
-        <div class="form-group"><input type="number" id="taskRewardInput" placeholder="報酬額（円）" min="0"></div>
-        <button class="btn-add" onclick="createTask()">発行する</button>
-      </div>
-      <div id="taskListArea"></div>
-    </div>
-
-    <div id="tcTab-comps" style="display:none;">
-      <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
-        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいコンペを開催</div>
-        <div class="form-group"><input type="text" id="compTitleInput" placeholder="コンペ名（例：秋のPOPデザイン）"></div>
-        <div class="form-group"><input type="text" id="compDescInput" placeholder="テーマ・条件（任意）"></div>
-        <div class="form-group"><input type="date" id="compDeadlineInput"></div>
-        <button class="btn-add" onclick="createCompetition()">開催する</button>
-      </div>
-      <div id="compListArea"></div>
-    </div>
-
-    <div style="display: flex; justify-content: flex-end; margin-top:16px;">
-      <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('taskCompModal')">閉じる / Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Perfect A4 Printable Sheet Area -->
+<!-- Printable Report Sheet Area (共通のA4印刷シート。内容は printReport(mode) がJSで動的生成) -->
 <div id="printable-feedback">
   <div class="fb-header-container">
     <div class="fb-header-left">
-      <h1 class="fb-title">インセンティブ新規獲得 月間全集計表</h1>
-      <div style="font-size: 9pt; color: #555;">Incentive Monthly Acquisition Full Report</div>
+      <h1 class="fb-title" id="fb-title">インセンティブ新規獲得 月間全集計表</h1>
+      <div style="font-size: 9pt; color: #555;" id="fb-subtitle">Incentive Monthly Acquisition Full Report</div>
     </div>
     <div class="fb-header-right">
       <b>対象月：</b><span id="fb-target-month"></span><br>
@@ -560,31 +689,21 @@
   </div>
 
   <div class="fb-summary-banner">
-    <div style="display:table-cell; vertical-align:middle; font-weight:bold; font-size:10.5pt;">
+    <div style="display:table-cell; vertical-align:middle; font-weight:bold; font-size:10.5pt;" id="fb-summary-label">
       店舗全体合計獲得数 / Total Store Acquisitions
     </div>
-    <div style="display:table-cell; text-align:right; vertical-align:middle; font-size:15pt; font-weight:bold; color:#d9381e;">
-      <span id="fb-store-total">0</span> 件 (cases)
+    <div style="display:table-cell; text-align:right; vertical-align:middle; font-size:15pt; font-weight:bold; color:#d9381e;" id="fb-summary-value">
+      0
     </div>
   </div>
 
-  <table class="fb-table">
-    <thead>
-      <tr>
-        <th style="width: 7%;">順位</th>
-        <th style="width: 22%;">スタッフ名</th>
-        <th style="width: 28%;">ランク (単価)</th>
-        <th style="width: 13%;">指示あり</th>
-        <th style="width: 13%;">自発的</th>
-        <th style="width: 8%;">合計</th>
-        <th style="width: 14%;">見込支給額</th>
-      </tr>
-    </thead>
+  <table class="fb-table" id="fb-table">
+    <thead id="fb-table-head"></thead>
     <tbody id="fb-table-body"></tbody>
   </table>
 
   <div class="fb-footer-note">
-    ※本シートは指定月の全登録スタッフの実績・計算結果を一覧出力したものです。
+    ※本シートは指定月の登録内容を一覧出力したものです。
   </div>
 </div>
 
@@ -728,23 +847,25 @@
     return idx >= 0 ? idx + 1 : 1;
   }
 
-  // 月選択の初期化
+  // 月選択の初期化（獲得表・報酬ランキング両方のセレクトを同じ内容で用意）
   function initMonthSelect() {
-    const select = document.getElementById("monthSelect");
-    select.innerHTML = "";
-    
-    for(let i=0; i<6; i++) {
-      let d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      let ym = getYearMonthString(d);
-      let label = `${d.getFullYear()}年${d.getMonth()+1}月 (${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()})`;
-      if (i === 0) label += " ★今月 / Current";
-      
-      let opt = document.createElement("option");
-      opt.value = ym;
-      opt.innerText = label;
-      select.appendChild(opt);
-    }
-    select.value = currentYYYYMM;
+    ["monthSelect", "monthSelectReward"].forEach(selectId => {
+      const select = document.getElementById(selectId);
+      select.innerHTML = "";
+
+      for(let i=0; i<6; i++) {
+        let d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        let ym = getYearMonthString(d);
+        let label = `${d.getFullYear()}年${d.getMonth()+1}月 (${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()})`;
+        if (i === 0) label += " ★今月 / Current";
+
+        let opt = document.createElement("option");
+        opt.value = ym;
+        opt.innerText = label;
+        select.appendChild(opt);
+      }
+      select.value = currentYYYYMM;
+    });
   }
 
   // スタッフUIの更新
@@ -858,6 +979,62 @@
     });
 
     document.getElementById("total-store-count").innerText = storeTotal;
+    renderRewardRanking();
+  }
+
+  // 報酬ランキング：レシート・クエスト・コンペの支給額を合算し、累計金額のみで順位付けする
+  function renderRewardRanking() {
+    const tbody = document.getElementById("reward-ranking-table-body");
+    if (!tbody) return;
+
+    const records = acquisitionsData[selectedMonth] || [];
+
+    let summary = staffList.map(s => {
+      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定", rate: 0 };
+      const myRecords = records.filter(r => r.staffName === s.name);
+      const receiptReward = myRecords.length * rank.rate;
+      const taskReward = getTaskRewardForStaff(s.id, selectedMonth);
+      const compReward = getCompetitionRewardForStaff(s.id, selectedMonth);
+      const totalAmount = receiptReward + taskReward + compReward;
+
+      return { id: s.id, name: s.name, rankLabel: rank.label, receiptReward, taskReward, compReward, totalAmount };
+    });
+
+    summary.sort((a, b) => b.totalAmount - a.totalAmount);
+
+    tbody.innerHTML = "";
+    let storePayout = 0;
+
+    summary.forEach((item, index) => {
+      storePayout += item.totalAmount;
+
+      let rankSymbol = index + 1;
+      let rowClass = "";
+      if (index === 0 && item.totalAmount > 0) { rankSymbol = "🥇 1"; rowClass = "rank-row-1"; }
+      else if (index === 1 && item.totalAmount > 0) { rankSymbol = "🥈 2"; rowClass = "rank-row-2"; }
+      else if (index === 2 && item.totalAmount > 0) { rankSymbol = "🥉 3"; rowClass = "rank-row-3"; }
+
+      const staffMaster = staffList.find(s => s.id === item.id);
+      const tierColor = staffMaster ? getRankTierColor(staffMaster.rankKey) : "#9ca3af";
+      const level = staffMaster ? getRankLevel(staffMaster.rankKey) : 1;
+
+      tbody.innerHTML += `
+        <tr class="${rowClass}">
+          <td class="rank-badge">${rankSymbol}</td>
+          <td class="staff-info">
+            <span class="staff-name">${item.name}</span>
+            <span class="rank-tag" style="background:${tierColor};">Lv.${level} ${item.rankLabel}</span>
+          </td>
+          <td>¥${item.receiptReward.toLocaleString()}</td>
+          <td>${item.taskReward > 0 ? `⚔️¥${item.taskReward.toLocaleString()}` : '-'}</td>
+          <td>${item.compReward > 0 ? `🎨¥${item.compReward.toLocaleString()}` : '-'}</td>
+          <td class="reward-text">💰¥${item.totalAmount.toLocaleString()}</td>
+        </tr>
+      `;
+    });
+
+    const payoutEl = document.getElementById("total-store-payout");
+    if (payoutEl) payoutEl.innerText = `¥${storePayout.toLocaleString()}`;
   }
 
   function toggleDrawer(id) {
@@ -878,18 +1055,23 @@
       .reduce((sum, t) => sum + (t.reward || 0), 0);
   }
 
-  function openTaskCompModal() {
-    renderTaskList();
-    renderCompetitionList();
-    document.getElementById("taskCompModal").style.display = "flex";
-  }
+  // ============================================================
+  // 画面遷移（ホーム／クエスト／コンペ／獲得表／報酬ランキング）
+  // ============================================================
+  const SCREEN_IDS = ["homeScreen", "questScreen", "compScreen", "acquisitionScreen", "rewardScreen"];
 
-  function switchTcTab(tab) {
-    document.getElementById("tcTab-tasks").style.display = tab === "tasks" ? "block" : "none";
-    document.getElementById("tcTab-comps").style.display = tab === "comps" ? "block" : "none";
-    document.querySelectorAll(".tc-tab-btn").forEach(b => {
-      b.classList.toggle("active", b.getAttribute("data-tab") === tab);
+  function showScreen(name) {
+    const targetId = name === "home" ? "homeScreen" : `${name}Screen`;
+    SCREEN_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = id === targetId ? "block" : "none";
     });
+    document.getElementById("backHomeBtn").style.display = name === "home" ? "none" : "inline-flex";
+
+    if (name === "quest") { renderTaskList(); }
+    if (name === "comp") { renderCompetitionList(); }
+    if (name === "acquisition") { renderRanking(); }
+    if (name === "reward") { renderRewardRanking(); }
   }
 
   function renderTaskCard(t) {
@@ -1349,8 +1531,11 @@
     }
   }
 
-  function changeMonth() {
-    selectedMonth = document.getElementById("monthSelect").value;
+  function changeMonth(sourceSelect) {
+    selectedMonth = sourceSelect.value;
+    // 獲得表・報酬ランキング、どちらの月セレクトを変更しても両方を同じ月に同期する
+    document.getElementById("monthSelect").value = selectedMonth;
+    document.getElementById("monthSelectReward").value = selectedMonth;
     if (firebaseEnabled) {
       attachAcquisitionsListener(selectedMonth);
     } else {
@@ -1777,47 +1962,175 @@
     }
   }
 
-  // A4集計印刷
-  function openPrintModal() {
+  // ============================================================
+  // 印刷レポート（4画面それぞれに専用の印刷ボタンがあり、共通のA4シートを
+  // モードに応じて動的に組み立てる）
+  // ============================================================
+  function printReport(mode) {
     const ymParts = selectedMonth.split('-');
     const formattedYM = `${ymParts[0]}年${parseInt(ymParts[1])}月`;
     document.getElementById("fb-target-month").innerText = formattedYM;
     document.getElementById("fb-issue-date").innerText = new Date().toLocaleDateString('ja-JP');
 
-    const records = acquisitionsData[selectedMonth] || [];
-    let storeTotal = records.length;
-    document.getElementById("fb-store-total").innerText = storeTotal;
-
+    const thead = document.getElementById("fb-table-head");
     const tbody = document.getElementById("fb-table-body");
     tbody.innerHTML = "";
 
-    let staffSummary = staffList.map(s => {
-      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定", rate: 0 };
-      const myRecords = records.filter(r => r.staffName === s.name);
-      const instructedCount = myRecords.filter(r => r.type === "指示あり").length;
-      const voluntaryCount = myRecords.filter(r => r.type === "自発的").length;
-      const totalCount = myRecords.length;
-      const taskReward = getTaskRewardForStaff(s.id, selectedMonth);
-      const compReward = getCompetitionRewardForStaff(s.id, selectedMonth);
-      const totalAmount = totalCount * rank.rate + taskReward + compReward;
-      return { name: s.name, rankLabel: rank.label, rate: rank.rate, instructedCount, voluntaryCount, totalCount, totalAmount };
-    });
+    if (mode === "acquisition") {
+      document.getElementById("fb-title").innerText = "獲得実績 月間集計表";
+      document.getElementById("fb-subtitle").innerText = "Monthly Acquisition Report";
 
-    staffSummary.sort((a, b) => b.totalCount - a.totalCount);
+      const records = acquisitionsData[selectedMonth] || [];
+      document.getElementById("fb-summary-label").innerText = "店舗全体合計獲得数 / Total Store Acquisitions";
+      document.getElementById("fb-summary-value").innerText = `${records.length} 件 (cases)`;
 
-    staffSummary.forEach((item, idx) => {
-      tbody.innerHTML += `
+      thead.innerHTML = `
         <tr>
-          <td><b>${idx + 1}</b></td>
-          <td style="text-align:left; font-weight:bold;">${item.name}</td>
-          <td style="text-align:left;">${item.rankLabel} (@¥${item.rate})</td>
-          <td>${item.instructedCount} 件</td>
-          <td>${item.voluntaryCount} 件</td>
-          <td style="font-size:10pt;"><b>${item.totalCount} 件</b></td>
-          <td style="color:#d9381e; font-weight:bold;">¥${item.totalAmount.toLocaleString()}</td>
+          <th style="width: 7%;">順位</th>
+          <th style="width: 22%;">スタッフ名</th>
+          <th style="width: 28%;">ランク (単価)</th>
+          <th style="width: 13%;">指示あり</th>
+          <th style="width: 13%;">自発的</th>
+          <th style="width: 8%;">合計</th>
+          <th style="width: 14%;">見込支給額</th>
         </tr>
       `;
-    });
+
+      let summary = staffList.map(s => {
+        const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定", rate: 0 };
+        const myRecords = records.filter(r => r.staffName === s.name);
+        const instructedCount = myRecords.filter(r => r.type === "指示あり").length;
+        const voluntaryCount = myRecords.filter(r => r.type === "自発的").length;
+        const totalCount = myRecords.length;
+        const taskReward = getTaskRewardForStaff(s.id, selectedMonth);
+        const compReward = getCompetitionRewardForStaff(s.id, selectedMonth);
+        const totalAmount = totalCount * rank.rate + taskReward + compReward;
+        return { name: s.name, rankLabel: rank.label, rate: rank.rate, instructedCount, voluntaryCount, totalCount, totalAmount };
+      });
+      summary.sort((a, b) => b.totalCount - a.totalCount);
+
+      summary.forEach((item, idx) => {
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${idx + 1}</b></td>
+            <td style="text-align:left; font-weight:bold;">${item.name}</td>
+            <td style="text-align:left;">${item.rankLabel} (@¥${item.rate})</td>
+            <td>${item.instructedCount} 件</td>
+            <td>${item.voluntaryCount} 件</td>
+            <td style="font-size:10pt;"><b>${item.totalCount} 件</b></td>
+            <td style="color:#d9381e; font-weight:bold;">¥${item.totalAmount.toLocaleString()}</td>
+          </tr>
+        `;
+      });
+
+    } else if (mode === "reward") {
+      document.getElementById("fb-title").innerText = "報酬ランキング 月間集計表";
+      document.getElementById("fb-subtitle").innerText = "Monthly Reward Ranking (Total Payout)";
+
+      const records = acquisitionsData[selectedMonth] || [];
+      let summary = staffList.map(s => {
+        const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定", rate: 0 };
+        const myRecords = records.filter(r => r.staffName === s.name);
+        const receiptReward = myRecords.length * rank.rate;
+        const taskReward = getTaskRewardForStaff(s.id, selectedMonth);
+        const compReward = getCompetitionRewardForStaff(s.id, selectedMonth);
+        const totalAmount = receiptReward + taskReward + compReward;
+        return { name: s.name, rankLabel: rank.label, receiptReward, taskReward, compReward, totalAmount };
+      });
+      summary.sort((a, b) => b.totalAmount - a.totalAmount);
+
+      const storePayout = summary.reduce((sum, x) => sum + x.totalAmount, 0);
+      document.getElementById("fb-summary-label").innerText = "店舗全体合計支給額 / Total Store Payout";
+      document.getElementById("fb-summary-value").innerText = `¥${storePayout.toLocaleString()}`;
+
+      thead.innerHTML = `
+        <tr>
+          <th style="width: 8%;">順位</th>
+          <th style="width: 24%;">スタッフ名 / ランク</th>
+          <th style="width: 18%;">レシート報酬</th>
+          <th style="width: 18%;">クエスト報酬</th>
+          <th style="width: 16%;">コンペ賞金</th>
+          <th style="width: 16%;">合計支給額</th>
+        </tr>
+      `;
+
+      summary.forEach((item, idx) => {
+        tbody.innerHTML += `
+          <tr>
+            <td><b>${idx + 1}</b></td>
+            <td style="text-align:left; font-weight:bold;">${item.name}<br><span style="font-weight:normal; font-size:8pt;">${item.rankLabel}</span></td>
+            <td>¥${item.receiptReward.toLocaleString()}</td>
+            <td>¥${item.taskReward.toLocaleString()}</td>
+            <td>¥${item.compReward.toLocaleString()}</td>
+            <td style="color:#d9381e; font-weight:bold;">¥${item.totalAmount.toLocaleString()}</td>
+          </tr>
+        `;
+      });
+
+    } else if (mode === "quest") {
+      document.getElementById("fb-title").innerText = "クエスト実施記録";
+      document.getElementById("fb-subtitle").innerText = "Quest Board Report";
+      document.getElementById("fb-summary-label").innerText = "登録クエスト数 / Total Quests";
+      document.getElementById("fb-summary-value").innerText = `${tasksData.length} 件`;
+
+      thead.innerHTML = `
+        <tr>
+          <th style="width: 28%;">クエスト名</th>
+          <th style="width: 16%;">報酬額</th>
+          <th style="width: 16%;">ステータス</th>
+          <th style="width: 24%;">受注者</th>
+          <th style="width: 16%;">発行日</th>
+        </tr>
+      `;
+
+      const statusLabel = { open: "受注可能", claimed: "挑戦中", submitted: "承認待ち", approved: "達成済み" };
+      const sorted = [...tasksData].sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+      sorted.forEach(t => {
+        const createdMs = toMillis(t.createdAt);
+        const created = createdMs ? new Date(createdMs).toLocaleDateString('ja-JP') : "-";
+        tbody.innerHTML += `
+          <tr>
+            <td style="text-align:left; font-weight:bold;">${t.title}</td>
+            <td>¥${(t.reward || 0).toLocaleString()}</td>
+            <td>${statusLabel[t.status] || t.status}</td>
+            <td>${t.claimedBy ? t.claimedBy.staffName : "-"}</td>
+            <td>${created}</td>
+          </tr>
+        `;
+      });
+
+    } else if (mode === "comp") {
+      document.getElementById("fb-title").innerText = "POP/SNSコンペ実施記録";
+      document.getElementById("fb-subtitle").innerText = "Contest Report";
+      document.getElementById("fb-summary-label").innerText = "開催コンペ数 / Total Contests";
+      document.getElementById("fb-summary-value").innerText = `${competitionsData.length} 件`;
+
+      thead.innerHTML = `
+        <tr>
+          <th style="width: 28%;">コンペ名</th>
+          <th style="width: 14%;">ステータス</th>
+          <th style="width: 14%;">応募数</th>
+          <th style="width: 24%;">優勝者</th>
+          <th style="width: 20%;">賞金額</th>
+        </tr>
+      `;
+
+      const sorted = [...competitionsData].sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+      sorted.forEach(c => {
+        const entries = competitionEntriesData.filter(e => e.competitionId === c.id);
+        const winners = entries.filter(e => e.isWinner);
+        const winnerTotal = winners.reduce((sum, w) => sum + (w.prizeAmount || 0), 0);
+        tbody.innerHTML += `
+          <tr>
+            <td style="text-align:left; font-weight:bold;">${c.title}</td>
+            <td>${c.status === "closed" ? "終了" : "募集中"}</td>
+            <td>${entries.length} 件</td>
+            <td>${winners.length ? winners.map(w => w.staffName).join('、') : "-"}</td>
+            <td>${winners.length ? `¥${winnerTotal.toLocaleString()}` : "-"}</td>
+          </tr>
+        `;
+      });
+    }
 
     window.print();
   }
@@ -1826,6 +2139,7 @@
   initMonthSelect();
   refreshStaffUI();
   renderRanking();
+  showScreen('home');
   if (firebaseEnabled) {
     initFirebaseSync();
   } else if (firebaseConfigured) {
