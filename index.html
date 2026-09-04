@@ -259,6 +259,37 @@
       margin-top: 6px;
     }
 
+    /* Task Board & Contest Tabs */
+    .tc-tab-btn {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      background: #f5f5f5;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: #666;
+    }
+    .tc-tab-btn.active {
+      background: var(--secondary);
+      color: white;
+      border-color: var(--secondary);
+    }
+    .tc-card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+    .tc-inline-form {
+      display: none;
+      margin-top: 8px;
+      background: #f9f9f9;
+      padding: 8px;
+      border-radius: 6px;
+    }
+
     /* Printable Feedback Sheet Design */
     #printable-feedback {
       display: none;
@@ -314,6 +345,7 @@
     </div>
     <div class="btn-group">
       <button class="btn btn-primary" onclick="openUploadModal()">📷 レシート登録 / Add Receipt</button>
+      <button class="btn btn-secondary" onclick="openTaskCompModal()">🎯 タスク＆コンペ / Tasks & Contests</button>
       <button class="btn btn-secondary" onclick="openPrintModal()">🖨 A4集計結果を印刷 / Print A4 Summary</button>
       <button class="btn btn-dark" onclick="openMasterModal()">⚙️ スタッフ・マスタ管理 / Master Settings</button>
     </div>
@@ -433,6 +465,44 @@
   </div>
 </div>
 
+<!-- Task Board & Contest Modal -->
+<div class="modal no-print" id="taskCompModal">
+  <div class="modal-content" style="max-width:640px;">
+    <h3>🎯 タスク掲示板 ＆ コンペ / Tasks & Contests</h3>
+
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button class="tc-tab-btn active" data-tab="tasks" onclick="switchTcTab('tasks')">📋 タスク掲示板</button>
+      <button class="tc-tab-btn" data-tab="comps" onclick="switchTcTab('comps')">🎨 POP/SNSコンペ</button>
+    </div>
+
+    <div id="tcTab-tasks">
+      <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
+        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいタスクを掲示</div>
+        <div class="form-group"><input type="text" id="taskTitleInput" placeholder="タスク名（例：POP作り直し）"></div>
+        <div class="form-group"><input type="text" id="taskDescInput" placeholder="内容・条件（任意）"></div>
+        <div class="form-group"><input type="number" id="taskRewardInput" placeholder="報酬額（円）" min="0"></div>
+        <button class="btn-add" onclick="createTask()">掲示する</button>
+      </div>
+      <div id="taskListArea"></div>
+    </div>
+
+    <div id="tcTab-comps" style="display:none;">
+      <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
+        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいコンペを開催</div>
+        <div class="form-group"><input type="text" id="compTitleInput" placeholder="コンペ名（例：秋のPOPデザイン）"></div>
+        <div class="form-group"><input type="text" id="compDescInput" placeholder="テーマ・条件（任意）"></div>
+        <div class="form-group"><input type="date" id="compDeadlineInput"></div>
+        <button class="btn-add" onclick="createCompetition()">開催する</button>
+      </div>
+      <div id="compListArea"></div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; margin-top:16px;">
+      <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('taskCompModal')">閉じる / Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Perfect A4 Printable Sheet Area -->
 <div id="printable-feedback">
   <div class="fb-header-container">
@@ -498,16 +568,26 @@
     measurementId: "G-78KFF9L4XK"
   };
 
-  const firebaseEnabled = !!(firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_"));
+  const firebaseConfigured = !!(firebaseConfig.apiKey && !firebaseConfig.apiKey.includes("YOUR_"));
 
   let db = null;
   let auth = null;
 
-  if (firebaseEnabled) {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    auth = firebase.auth();
+  // Firebase SDKの読み込みに失敗した場合（通信不安定・CDN障害など）でも
+  // ページ全体が壊れないよう、ここで例外を吸収してローカル動作にフォールバックする
+  if (firebaseConfigured && typeof firebase !== "undefined") {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      auth = firebase.auth();
+    } catch (e) {
+      console.error("Firebase初期化エラー（SDK読み込み失敗の可能性）:", e);
+      db = null;
+      auth = null;
+    }
   }
+
+  const firebaseEnabled = firebaseConfigured && !!db && !!auth;
 
   // Firestoreの1ドキュメント上限(1,048,576バイト)に収まるよう、
   // レシート画像はこのバイト数を上限にリサイズ・圧縮してから保存します。
@@ -578,6 +658,22 @@
   // 獲得データ保持用
   let acquisitionsData = {};
 
+  // タスク掲示板・コンペ用データ（低頻度のため月別分割はせず全件を同期）
+  let tasksData = [];
+  let competitionsData = [];
+  let competitionEntriesData = [];
+
+  function genLocalId() {
+    return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function toMillis(v) {
+    if (!v) return 0;
+    if (typeof v.toMillis === "function") return v.toMillis();
+    if (v instanceof Date) return v.getTime();
+    return 0;
+  }
+
   // 月選択の初期化
   function initMonthSelect() {
     const select = document.getElementById("monthSelect");
@@ -624,7 +720,10 @@
       const instructedCount = myRecords.filter(r => r.type === "指示あり").length;
       const voluntaryCount = myRecords.filter(r => r.type === "自発的").length;
       const totalCount = myRecords.length;
-      const totalAmount = totalCount * rank.rate;
+
+      const taskReward = getTaskRewardForStaff(s.id, selectedMonth);
+      const compReward = getCompetitionRewardForStaff(s.id, selectedMonth);
+      const totalAmount = totalCount * rank.rate + taskReward + compReward;
 
       return {
         id: s.id,
@@ -634,6 +733,8 @@
         instructedCount,
         voluntaryCount,
         totalCount,
+        taskReward,
+        compReward,
         totalAmount,
         myRecords
       };
@@ -664,7 +765,14 @@
           <td>${item.instructedCount}</td>
           <td>${item.voluntaryCount}</td>
           <td><b>${item.totalCount}</b></td>
-          <td class="reward-text">¥${item.totalAmount.toLocaleString()}</td>
+          <td class="reward-text">
+            ¥${item.totalAmount.toLocaleString()}
+            ${(item.taskReward > 0 || item.compReward > 0) ? `
+              <div style="font-size:0.62rem; color:#888; font-weight:normal;">
+                ${item.taskReward > 0 ? `🎯タスク¥${item.taskReward.toLocaleString()} ` : ''}${item.compReward > 0 ? `🎨コンペ¥${item.compReward.toLocaleString()}` : ''}
+              </div>
+            ` : ''}
+          </td>
           <td>
             <button class="btn-receipt" onclick="toggleDrawer('${item.id}')">
               📷 ${item.totalCount}枚
@@ -700,6 +808,477 @@
     }
   }
 
+  // ============================================================
+  // タスク掲示板（低頻度タスクの成果報酬マッチング）
+  // ============================================================
+  function getTaskRewardForStaff(staffId, month) {
+    return tasksData
+      .filter(t => t.status === "approved" && t.approvedMonth === month && t.claimedBy && t.claimedBy.staffId === staffId)
+      .reduce((sum, t) => sum + (t.reward || 0), 0);
+  }
+
+  function openTaskCompModal() {
+    renderTaskList();
+    renderCompetitionList();
+    document.getElementById("taskCompModal").style.display = "flex";
+  }
+
+  function switchTcTab(tab) {
+    document.getElementById("tcTab-tasks").style.display = tab === "tasks" ? "block" : "none";
+    document.getElementById("tcTab-comps").style.display = tab === "comps" ? "block" : "none";
+    document.querySelectorAll(".tc-tab-btn").forEach(b => {
+      b.classList.toggle("active", b.getAttribute("data-tab") === tab);
+    });
+  }
+
+  function renderTaskCard(t) {
+    let actionHtml = "";
+    if (t.status === "open") {
+      actionHtml = `
+        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="claimTask('${t.id}')">🙋 やります！</button>
+        <button class="btn-delete" onclick="cancelTask('${t.id}')">取消</button>
+      `;
+    } else if (t.status === "claimed") {
+      actionHtml = `
+        <div style="font-size:0.78rem; color:#555; margin:4px 0;">担当: <b>${t.claimedBy ? t.claimedBy.staffName : "-"}</b></div>
+        <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleTaskForm('${t.id}')">✅ 完了報告</button>
+        <button class="btn-delete" onclick="cancelTask('${t.id}')">取消</button>
+        <div id="taskForm-${t.id}" class="tc-inline-form">
+          <div class="form-group"><input type="text" id="taskNote-${t.id}" placeholder="完了メモ（任意）"></div>
+          <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">証拠写真（任意）</label><input type="file" id="taskImg-${t.id}" accept="image/*"></div>
+          <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="submitTaskCompletion('${t.id}')">報告する</button>
+        </div>
+      `;
+    } else if (t.status === "submitted") {
+      actionHtml = `
+        <div style="font-size:0.78rem; color:#555; margin:4px 0;">担当: <b>${t.claimedBy ? t.claimedBy.staffName : "-"}</b>${t.submissionNote ? " / メモ: " + t.submissionNote : ""}</div>
+        ${t.submissionImage ? `<img src="${t.submissionImage}" style="max-width:120px; border-radius:6px; display:block; margin-bottom:6px;" alt="完了報告写真">` : ""}
+        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="approveTask('${t.id}')">👍 承認する（報酬確定）</button>
+      `;
+    } else {
+      actionHtml = `<span style="font-size:0.78rem; color:var(--primary); font-weight:bold;">✅ 承認済み / 担当: ${t.claimedBy ? t.claimedBy.staffName : "-"}</span>`;
+    }
+
+    return `
+      <div class="tc-card">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <b style="font-size:0.9rem;">${t.title}</b>
+          <span class="reward-text" style="font-size:0.85rem;">¥${(t.reward || 0).toLocaleString()}</span>
+        </div>
+        ${t.description ? `<div style="font-size:0.78rem; color:#666; margin:2px 0 6px 0;">${t.description}</div>` : ""}
+        ${actionHtml}
+      </div>
+    `;
+  }
+
+  function renderTaskList() {
+    const area = document.getElementById("taskListArea");
+    if (!area) return;
+
+    const open = tasksData.filter(t => t.status === "open");
+    const claimed = tasksData.filter(t => t.status === "claimed");
+    const submitted = tasksData.filter(t => t.status === "submitted");
+    const approved = tasksData.filter(t => t.status === "approved")
+      .sort((a, b) => toMillis(b.approvedAt) - toMillis(a.approvedAt))
+      .slice(0, 8);
+
+    area.innerHTML = `
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:8px 0 4px;">🟢 募集中 (${open.length})</h4>
+      ${open.length ? open.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">現在募集中のタスクはありません</div>'}
+
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">🔧 対応中 (${claimed.length})</h4>
+      ${claimed.length ? claimed.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">対応中のタスクはありません</div>'}
+
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">📝 承認待ち (${submitted.length})</h4>
+      ${submitted.length ? submitted.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">承認待ちのタスクはありません</div>'}
+
+      <details style="margin-top:12px;">
+        <summary style="font-size:0.82rem; color:#666; cursor:pointer;">✅ 完了履歴（直近${approved.length}件）</summary>
+        ${approved.length ? approved.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999; margin-top:6px;">まだ完了したタスクはありません</div>'}
+      </details>
+    `;
+  }
+
+  function toggleTaskForm(taskId) {
+    const el = document.getElementById(`taskForm-${taskId}`);
+    if (el) el.style.display = el.style.display === "block" ? "none" : "block";
+  }
+
+  async function createTask() {
+    const title = document.getElementById("taskTitleInput").value.trim();
+    const description = document.getElementById("taskDescInput").value.trim();
+    const reward = parseInt(document.getElementById("taskRewardInput").value);
+
+    if (!title) { alert("タスク名を入力してください"); return; }
+    if (!reward || reward <= 0) { alert("報酬額を入力してください"); return; }
+
+    const newTask = {
+      title, description, reward,
+      status: "open",
+      claimedBy: null, claimedAt: null,
+      submissionNote: null, submissionImage: null, submittedAt: null,
+      approvedAt: null, approvedMonth: null
+    };
+
+    if (firebaseEnabled) {
+      try {
+        await db.collection("tasks").add({ ...newTask, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      } catch (e) {
+        console.error("タスク掲示エラー:", e);
+        alert("タスクの掲示に失敗しました。");
+        return;
+      }
+    } else {
+      tasksData.push({ id: genLocalId(), ...newTask, createdAt: new Date() });
+      renderTaskList();
+    }
+
+    document.getElementById("taskTitleInput").value = "";
+    document.getElementById("taskDescInput").value = "";
+    document.getElementById("taskRewardInput").value = "";
+  }
+
+  async function claimTask(taskId) {
+    const input = prompt("担当者名を入力してください / Enter your name");
+    if (!input || !input.trim()) return;
+    const staffName = input.trim();
+
+    if (firebaseEnabled) {
+      try {
+        let existingStaff = staffList.find(s => s.name === staffName);
+        let staffId = existingStaff ? existingStaff.id : null;
+        if (!staffId) {
+          const newDoc = await db.collection("staff").add({ name: staffName, rankKey: rankMaster[0] ? rankMaster[0].key : "" });
+          staffId = newDoc.id;
+        }
+
+        const taskRef = db.collection("tasks").doc(taskId);
+        await db.runTransaction(async (tx) => {
+          const snap = await tx.get(taskRef);
+          if (!snap.exists || snap.data().status !== "open") {
+            throw new Error("ALREADY_CLAIMED");
+          }
+          tx.update(taskRef, {
+            status: "claimed",
+            claimedBy: { staffId, staffName },
+            claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+      } catch (e) {
+        if (e.message === "ALREADY_CLAIMED") {
+          alert("すでに他のスタッフが担当しています。");
+        } else {
+          console.error("タスク担当登録エラー:", e);
+          alert("担当登録に失敗しました。");
+        }
+      }
+    } else {
+      const task = tasksData.find(t => t.id === taskId);
+      if (!task || task.status !== "open") { alert("すでに他のスタッフが担当しています。"); return; }
+      let existingStaff = staffList.find(s => s.name === staffName);
+      let staffId = existingStaff ? existingStaff.id : genLocalId();
+      if (!existingStaff) staffList.push({ id: staffId, name: staffName, rankKey: rankMaster[0] ? rankMaster[0].key : "" });
+      task.status = "claimed";
+      task.claimedBy = { staffId, staffName };
+      task.claimedAt = new Date();
+      renderTaskList();
+    }
+  }
+
+  async function submitTaskCompletion(taskId) {
+    const noteInput = document.getElementById(`taskNote-${taskId}`);
+    const imgInput = document.getElementById(`taskImg-${taskId}`);
+    const note = noteInput ? noteInput.value.trim() : "";
+    let image = "";
+    if (imgInput && imgInput.files.length > 0) {
+      image = await compressImageToDataUrl(imgInput.files[0]);
+    }
+
+    if (firebaseEnabled) {
+      try {
+        await db.collection("tasks").doc(taskId).update({
+          status: "submitted",
+          submissionNote: note,
+          submissionImage: image,
+          submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (e) {
+        console.error("完了報告エラー:", e);
+        alert("完了報告に失敗しました。");
+      }
+    } else {
+      const task = tasksData.find(t => t.id === taskId);
+      if (task) {
+        task.status = "submitted";
+        task.submissionNote = note;
+        task.submissionImage = image;
+        task.submittedAt = new Date();
+        renderTaskList();
+      }
+    }
+  }
+
+  async function approveTask(taskId) {
+    if (!confirm("このタスクを承認し、報酬を確定しますか？")) return;
+    const month = getYearMonthString(new Date());
+
+    if (firebaseEnabled) {
+      try {
+        await db.collection("tasks").doc(taskId).update({
+          status: "approved",
+          approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          approvedMonth: month
+        });
+      } catch (e) {
+        console.error("タスク承認エラー:", e);
+        alert("承認に失敗しました。");
+      }
+    } else {
+      const task = tasksData.find(t => t.id === taskId);
+      if (task) {
+        task.status = "approved";
+        task.approvedAt = new Date();
+        task.approvedMonth = month;
+        renderTaskList();
+        renderRanking();
+      }
+    }
+  }
+
+  async function cancelTask(taskId) {
+    if (!confirm("このタスクを取り消しますか？")) return;
+    if (firebaseEnabled) {
+      try {
+        await db.collection("tasks").doc(taskId).delete();
+      } catch (e) {
+        console.error("タスク取消エラー:", e);
+        alert("取消に失敗しました。");
+      }
+    } else {
+      tasksData = tasksData.filter(t => t.id !== taskId);
+      renderTaskList();
+    }
+  }
+
+  // ============================================================
+  // POP／SNSコンペ
+  // ============================================================
+  function getCompetitionRewardForStaff(staffId, month) {
+    return competitionEntriesData
+      .filter(e => e.isWinner && e.resultMonth === month && e.staffId === staffId)
+      .reduce((sum, e) => sum + (e.prizeAmount || 0), 0);
+  }
+
+  function renderCompetitionEntry(e) {
+    return `
+      <div style="display:flex; gap:8px; align-items:center; border:1px solid #eee; border-radius:6px; padding:6px; margin-bottom:6px; ${e.isWinner ? 'background:#fffbea; border-color:#f0c419;' : ''}">
+        ${e.entryType === "image" && e.image
+          ? `<img src="${e.image}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; flex-shrink:0;" alt="応募作品">`
+          : `<span style="font-size:1.3rem; flex-shrink:0;">🔗</span>`}
+        <div style="flex:1; font-size:0.78rem; min-width:0;">
+          <b>${e.staffName}</b>${e.isWinner ? ` <span style="color:#d9a300;">🏆 優勝 ¥${(e.prizeAmount || 0).toLocaleString()}</span>` : ''}<br>
+          ${e.entryType === "link" && e.link ? `<a href="${e.link}" target="_blank" rel="noopener noreferrer" style="word-break:break-all;">${e.link}</a><br>` : ''}
+          ${e.comment ? `<span style="color:#666;">${e.comment}</span>` : ''}
+        </div>
+        ${!e.isWinner ? `<button class="btn-receipt" style="flex-shrink:0;" onclick="chooseWinner('${e.id}')">🏆 優勝に選ぶ</button>` : ''}
+      </div>
+    `;
+  }
+
+  function renderCompetitionCard(c) {
+    const entries = competitionEntriesData.filter(e => e.competitionId === c.id);
+    const isOpen = c.status !== "closed";
+
+    return `
+      <div class="tc-card">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <b style="font-size:0.9rem;">${c.title}</b>
+          <span style="font-size:0.72rem; color:#999;">${isOpen ? "募集中" : "終了"}</span>
+        </div>
+        ${c.description ? `<div style="font-size:0.78rem; color:#666; margin:2px 0 6px 0;">${c.description}</div>` : ""}
+        ${c.deadline ? `<div style="font-size:0.72rem; color:#999; margin-bottom:6px;">締切: ${c.deadline}</div>` : ""}
+
+        <div style="margin:8px 0;">
+          ${entries.length ? entries.map(renderCompetitionEntry).join('') : '<div style="font-size:0.78rem; color:#999;">まだ応募はありません</div>'}
+        </div>
+
+        ${isOpen ? `
+          <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleEntryForm('${c.id}')">📤 作品を応募する</button>
+          <button class="btn-delete" onclick="closeCompetition('${c.id}')">このコンペを終了する</button>
+          <div id="entryForm-${c.id}" class="tc-inline-form">
+            <div class="form-group"><input type="text" id="entryName-${c.id}" list="staffDatalist" placeholder="スタッフ名"></div>
+            <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">画像で応募する場合</label><input type="file" id="entryImg-${c.id}" accept="image/*"></div>
+            <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">動画/SNS投稿のURLで応募する場合</label><input type="text" id="entryLink-${c.id}" placeholder="https://..."></div>
+            <div class="form-group"><input type="text" id="entryComment-${c.id}" placeholder="コメント（任意）"></div>
+            <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="submitEntry('${c.id}')">応募する</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  function renderCompetitionList() {
+    const area = document.getElementById("compListArea");
+    if (!area) return;
+
+    const active = competitionsData.filter(c => c.status !== "closed");
+    const closed = competitionsData.filter(c => c.status === "closed")
+      .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt))
+      .slice(0, 5);
+
+    area.innerHTML = `
+      ${active.length ? active.map(renderCompetitionCard).join('') : '<div style="font-size:0.78rem; color:#999;">開催中のコンペはありません</div>'}
+      ${closed.length ? `
+        <details style="margin-top:12px;">
+          <summary style="font-size:0.82rem; color:#666; cursor:pointer;">終了したコンペ（直近${closed.length}件）</summary>
+          ${closed.map(renderCompetitionCard).join('')}
+        </details>
+      ` : ''}
+    `;
+  }
+
+  function toggleEntryForm(compId) {
+    const el = document.getElementById(`entryForm-${compId}`);
+    if (el) el.style.display = el.style.display === "block" ? "none" : "block";
+  }
+
+  async function createCompetition() {
+    const title = document.getElementById("compTitleInput").value.trim();
+    const description = document.getElementById("compDescInput").value.trim();
+    const deadline = document.getElementById("compDeadlineInput").value || null;
+
+    if (!title) { alert("コンペ名を入力してください"); return; }
+
+    const newComp = { title, description, deadline, status: "open", closedMonth: null };
+
+    if (firebaseEnabled) {
+      try {
+        await db.collection("competitions").add({ ...newComp, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      } catch (e) {
+        console.error("コンペ開催エラー:", e);
+        alert("コンペの開催に失敗しました。");
+        return;
+      }
+    } else {
+      competitionsData.push({ id: genLocalId(), ...newComp, createdAt: new Date() });
+      renderCompetitionList();
+    }
+
+    document.getElementById("compTitleInput").value = "";
+    document.getElementById("compDescInput").value = "";
+    document.getElementById("compDeadlineInput").value = "";
+  }
+
+  async function submitEntry(compId) {
+    const nameInput = document.getElementById(`entryName-${compId}`);
+    const fileInput = document.getElementById(`entryImg-${compId}`);
+    const linkInput = document.getElementById(`entryLink-${compId}`);
+    const commentInput = document.getElementById(`entryComment-${compId}`);
+
+    const staffName = nameInput.value.trim();
+    if (!staffName) { alert("スタッフ名を入力してください"); return; }
+
+    let entryType = "";
+    let image = "";
+    let link = "";
+    if (fileInput.files.length > 0) {
+      entryType = "image";
+      image = await compressImageToDataUrl(fileInput.files[0]);
+    } else if (linkInput.value.trim()) {
+      entryType = "link";
+      link = linkInput.value.trim();
+    } else {
+      alert("画像またはリンクのどちらかを入力してください");
+      return;
+    }
+    const comment = commentInput.value.trim();
+    const comp = competitionsData.find(c => c.id === compId);
+
+    if (firebaseEnabled) {
+      try {
+        let existingStaff = staffList.find(s => s.name === staffName);
+        let staffId = existingStaff ? existingStaff.id : null;
+        if (!staffId) {
+          const newDoc = await db.collection("staff").add({ name: staffName, rankKey: rankMaster[0] ? rankMaster[0].key : "" });
+          staffId = newDoc.id;
+        }
+        await db.collection("competitionEntries").add({
+          competitionId: compId,
+          competitionTitle: comp ? comp.title : "",
+          staffId, staffName,
+          entryType, image, link, comment,
+          isWinner: false, prizeAmount: 0, resultMonth: null,
+          submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (e) {
+        console.error("応募エラー:", e);
+        alert("応募に失敗しました。");
+        return;
+      }
+    } else {
+      let existingStaff = staffList.find(s => s.name === staffName);
+      let staffId = existingStaff ? existingStaff.id : genLocalId();
+      if (!existingStaff) staffList.push({ id: staffId, name: staffName, rankKey: rankMaster[0] ? rankMaster[0].key : "" });
+      competitionEntriesData.push({
+        id: genLocalId(), competitionId: compId, competitionTitle: comp ? comp.title : "",
+        staffId, staffName, entryType, image, link, comment,
+        isWinner: false, prizeAmount: 0, resultMonth: null, submittedAt: new Date()
+      });
+      renderCompetitionList();
+    }
+
+    nameInput.value = "";
+    fileInput.value = "";
+    linkInput.value = "";
+    commentInput.value = "";
+  }
+
+  async function chooseWinner(entryId) {
+    const amountStr = prompt("賞金額(円)を入力してください", "1000");
+    if (amountStr === null) return;
+    const amount = parseInt(amountStr);
+    if (!amount || amount <= 0) { alert("正しい金額を入力してください"); return; }
+    const month = getYearMonthString(new Date());
+
+    if (firebaseEnabled) {
+      try {
+        await db.collection("competitionEntries").doc(entryId).update({
+          isWinner: true, prizeAmount: amount, resultMonth: month
+        });
+      } catch (e) {
+        console.error("優勝設定エラー:", e);
+        alert("優勝設定に失敗しました。");
+      }
+    } else {
+      const entry = competitionEntriesData.find(e => e.id === entryId);
+      if (entry) {
+        entry.isWinner = true;
+        entry.prizeAmount = amount;
+        entry.resultMonth = month;
+        renderCompetitionList();
+        renderRanking();
+      }
+    }
+  }
+
+  async function closeCompetition(compId) {
+    if (!confirm("このコンペを終了しますか？（応募の受付を締め切ります）")) return;
+    if (firebaseEnabled) {
+      try {
+        await db.collection("competitions").doc(compId).update({ status: "closed" });
+      } catch (e) {
+        console.error("コンペ終了エラー:", e);
+        alert("終了処理に失敗しました。");
+      }
+    } else {
+      const c = competitionsData.find(c => c.id === compId);
+      if (c) {
+        c.status = "closed";
+        renderCompetitionList();
+      }
+    }
+  }
+
   function changeMonth() {
     selectedMonth = document.getElementById("monthSelect").value;
     if (firebaseEnabled) {
@@ -723,6 +1302,9 @@
   let unsubRankMaster = null;
   let unsubStaff = null;
   let unsubAcquisitions = null;
+  let unsubTasks = null;
+  let unsubCompetitions = null;
+  let unsubCompetitionEntries = null;
 
   function setSyncStatus(state, message) {
     const el = document.getElementById("syncStatus");
@@ -796,6 +1378,38 @@
       });
   }
 
+  function attachTasksListener() {
+    if (unsubTasks) unsubTasks();
+    unsubTasks = db.collection("tasks").orderBy("createdAt", "desc").onSnapshot(snap => {
+      tasksData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderTaskList();
+      renderRanking();
+    }, err => {
+      console.error("tasks同期エラー:", err);
+    });
+  }
+
+  function attachCompetitionsListener() {
+    if (unsubCompetitions) unsubCompetitions();
+    unsubCompetitions = db.collection("competitions").orderBy("createdAt", "desc").onSnapshot(snap => {
+      competitionsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderCompetitionList();
+    }, err => {
+      console.error("competitions同期エラー:", err);
+    });
+  }
+
+  function attachCompetitionEntriesListener() {
+    if (unsubCompetitionEntries) unsubCompetitionEntries();
+    unsubCompetitionEntries = db.collection("competitionEntries").orderBy("submittedAt", "desc").onSnapshot(snap => {
+      competitionEntriesData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderCompetitionList();
+      renderRanking();
+    }, err => {
+      console.error("competitionEntries同期エラー:", err);
+    });
+  }
+
   async function initFirebaseSync() {
     setSyncStatus("ok", "接続確認中...");
     try {
@@ -805,6 +1419,9 @@
       attachRankMasterListener();
       attachStaffListener();
       attachAcquisitionsListener(selectedMonth);
+      attachTasksListener();
+      attachCompetitionsListener();
+      attachCompetitionEntriesListener();
       setSyncStatus("ok", "Firebase 連携中 (リアルタイム同期)");
     } catch (err) {
       console.error("Firebase初期化エラー:", err);
@@ -1110,7 +1727,9 @@
       const instructedCount = myRecords.filter(r => r.type === "指示あり").length;
       const voluntaryCount = myRecords.filter(r => r.type === "自発的").length;
       const totalCount = myRecords.length;
-      const totalAmount = totalCount * rank.rate;
+      const taskReward = getTaskRewardForStaff(s.id, selectedMonth);
+      const compReward = getCompetitionRewardForStaff(s.id, selectedMonth);
+      const totalAmount = totalCount * rank.rate + taskReward + compReward;
       return { name: s.name, rankLabel: rank.label, rate: rank.rate, instructedCount, voluntaryCount, totalCount, totalAmount };
     });
 
@@ -1139,6 +1758,8 @@
   renderRanking();
   if (firebaseEnabled) {
     initFirebaseSync();
+  } else if (firebaseConfigured) {
+    setSyncStatus("error", "Firebase SDKの読み込みに失敗しました（ローカルのみで動作中）");
   } else {
     setSyncStatus("off", "ローカルのみ動作中（Firebase未設定）");
   }
