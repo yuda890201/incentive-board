@@ -329,6 +329,9 @@
       box-shadow: 0 12px 32px rgba(50,42,109,0.25);
     }
     .modal-content h3 { margin-top: 0; color: var(--dark); }
+    #pinLoginOverlay { z-index: 200; }
+    #pinLoginOverlay .modal-content { max-width: 340px; text-align: center; }
+    #pinLoginStatus { font-size: 0.8rem; color: #d9534f; margin-top: 8px; min-height: 1.2em; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.82rem; font-weight: bold; margin-bottom: 4px; }
     .form-group input, .form-group select {
@@ -443,6 +446,20 @@
   </style>
 </head>
 <body>
+
+<div class="modal no-print" id="pinLoginOverlay">
+  <div class="modal-content">
+    <h3>🔒 ログイン</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 14px;">共通のPINコードを入力してください。</p>
+    <form id="pinLoginForm" onsubmit="return handlePinLoginSubmit(event)">
+      <div class="form-group">
+        <input type="password" id="pinLoginInput" placeholder="PINコード" autocomplete="off" autocapitalize="off" autocorrect="off" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">ログイン</button>
+    </form>
+    <div id="pinLoginStatus"></div>
+  </div>
+</div>
 
 <div class="container no-print">
   <!-- Header Card -->
@@ -745,6 +762,8 @@
   // Firebase コンソール > プロジェクトの設定 > マイアプリ から取得した
   // 設定オブジェクトをここに貼り付けてください。
   // 未設定のままの場合はローカル（このブラウザ内のみ）動作にフォールバックします。
+  // Firebase接続時は共通PINコード（メール/パスワード認証のダミーアカウント）
+  // でログインするまでデータの読み書きができません。
   // ============================================================
   const firebaseConfig = {
     apiKey: "AIzaSyAcHjZFn_dPPaLDFINqXTZSR_gCpQWaack",
@@ -1838,23 +1857,61 @@
     });
   }
 
+  let sharedLoginEmail = null;
+  let syncStarted = false;
+
+  function showPinLoginOverlay(message) {
+    document.getElementById("pinLoginOverlay").style.display = "flex";
+    document.getElementById("pinLoginStatus").textContent = message || "";
+  }
+
+  function hidePinLoginOverlay() {
+    document.getElementById("pinLoginOverlay").style.display = "none";
+    document.getElementById("pinLoginInput").value = "";
+  }
+
+  async function handlePinLoginSubmit(event) {
+    event.preventDefault();
+    const pin = document.getElementById("pinLoginInput").value.trim();
+    if (!pin) return false;
+    document.getElementById("pinLoginStatus").textContent = "ログイン中...";
+    try {
+      await auth.signInWithEmailAndPassword(sharedLoginEmail, pin);
+    } catch (err) {
+      document.getElementById("pinLoginStatus").textContent = "PINコードが違います";
+    }
+    return false;
+  }
+  window.handlePinLoginSubmit = handlePinLoginSubmit;
+
   async function initFirebaseSync() {
     setSyncStatus("ok", "接続確認中...");
-    try {
-      await auth.signInAnonymously();
-      await seedRankMasterIfEmpty();
-      await seedStaffIfEmpty();
-      attachRankMasterListener();
-      attachStaffListener();
-      attachAcquisitionsListener(selectedMonth);
-      attachTasksListener();
-      attachCompetitionsListener();
-      attachCompetitionEntriesListener();
-      setSyncStatus("ok", "Firebase 連携中 (リアルタイム同期)");
-    } catch (err) {
-      console.error("Firebase初期化エラー:", err);
-      setSyncStatus("error", "Firebase接続エラー（ローカルのみで動作）");
-    }
+    sharedLoginEmail = "staff@" + (firebaseConfig.projectId || "app") + ".local";
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        showPinLoginOverlay();
+        setSyncStatus("off", "PINコードを入力してください");
+        return;
+      }
+      hidePinLoginOverlay();
+      if (syncStarted) return;
+      syncStarted = true;
+      try {
+        await seedRankMasterIfEmpty();
+        await seedStaffIfEmpty();
+        attachRankMasterListener();
+        attachStaffListener();
+        attachAcquisitionsListener(selectedMonth);
+        attachTasksListener();
+        attachCompetitionsListener();
+        attachCompetitionEntriesListener();
+        setSyncStatus("ok", "Firebase 連携中 (リアルタイム同期)");
+      } catch (err) {
+        console.error("Firebase初期化エラー:", err);
+        setSyncStatus("error", "Firebase接続エラー（ローカルのみで動作）");
+      }
+    });
   }
 
   // レシート登録

@@ -17,9 +17,7 @@ Firestoreのドキュメントに直接保存するため、クレジットカ�
 
 1. [Firebase コンソール](https://console.firebase.google.com/) で新しいプロジェクトを作成します。
 2. **Firestore Database** を作成します（本番環境モードでOK。ルールは手順4で設定）。
-3. **Authentication** で **匿名（Anonymous）** ログインを有効にします（Sign-in method タブ）。
-   - ログイン画面なしでアプリを開いた人を自動的に匿名ユーザーとして認証し、
-     セキュリティルールで「認証済みユーザーのみ読み書き可」を強制するための仕組みです。
+3. **Authentication** で **メール / パスワード** ログインを有効にします（Sign-in method タブ）。
 4. Firestoreのルールを本リポジトリの `firestore.rules` の内容で公開します。
 5. プロジェクトの設定 ＞「マイアプリ」でWebアプリを追加し、表示された設定オブジェクト（`firebaseConfig`）をコピーします。
    - この手順では **Storage は有効化しないでください**（有効化するとBlazeプランへの切り替えを求められます）。
@@ -36,8 +34,11 @@ Firestoreのドキュメントに直接保存するため、クレジットカ�
    };
    ```
 
-7. `index.html` をブラウザで開く（またはGitHub Pagesなどにホスティングする）と、
-   ヘッダー部分に同期状態（🔥 Firebase 連携中 / 💾 ローカルのみ動作中）が表示されます。
+7. Authentication → Users → 「ユーザーを追加」で、以下の内容で1件だけ共通アカウントを登録します。
+   - メールアドレス: `staff@<手順6のprojectId>.local`（例: `projectId` が `incentive-board` なら `staff@incentive-board.local`）
+   - パスワード: 運用したいPINコード（Firebaseの制約で **6文字以上** が必要）
+8. `index.html` をブラウザで開く（またはGitHub Pagesなどにホスティングする）と、共通PINコードの入力画面が表示されます（Firebase未接続時はローカル動作のためこの画面は出ません）。
+   ログイン後、ヘッダー部分に同期状態（🔥 Firebase 連携中 / 💾 ローカルのみ動作中）が表示されます。ログインは端末に保存されるため、一度入力すればその端末では再入力の必要はありません。
 
 `firebaseConfig` を初期値（`YOUR_API_KEY` のまま）にしておくと、Firebaseに接続せず
 このブラウザ内だけで完結するローカル動作モードとして使えます（データはリロードで消えます）。
