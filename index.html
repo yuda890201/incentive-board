@@ -143,6 +143,25 @@
     }
     .icon-btn:hover { background: rgba(255,255,255,0.28); transform: rotate(25deg); }
 
+    /* Language switcher */
+    .lang-switcher { display: flex; gap: 4px; flex-wrap: wrap; }
+    .lang-btn {
+      padding: 3px 9px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.85);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .lang-btn.active { background: rgba(255,255,255,0.92); color: var(--dark); border-color: rgba(255,255,255,0.92); }
+    #pinLoginOverlay .lang-btn {
+      border-color: #ddd6ff; background: #f7f6ff; color: #7a75a8;
+    }
+    #pinLoginOverlay .lang-btn.active { background: var(--secondary); color: #fff; border-color: var(--secondary); }
+
     /* Home Screen: 4 large entrance tiles */
     .home-grid {
       display: grid;
@@ -449,13 +468,18 @@
 
 <div class="modal no-print" id="pinLoginOverlay">
   <div class="modal-content">
-    <h3>🔒 ログイン</h3>
-    <p style="font-size: 0.85rem; color: #666; margin-bottom: 14px;">共通のPINコードを入力してください。</p>
+    <div class="lang-switcher" style="justify-content:center; margin-bottom:10px;">
+      <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')">日本語</button>
+      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">English</button>
+      <button class="lang-btn" data-lang="ne" onclick="setLanguage('ne')">नेपाली</button>
+    </div>
+    <h3 data-i18n="login.title">🔒 ログイン</h3>
+    <p style="font-size: 0.85rem; color: #666; margin-bottom: 14px;" data-i18n="login.prompt">共通のPINコードを入力してください。</p>
     <form id="pinLoginForm" onsubmit="return handlePinLoginSubmit(event)">
       <div class="form-group">
-        <input type="password" id="pinLoginInput" placeholder="PINコード" autocomplete="off" autocapitalize="off" autocorrect="off" required>
+        <input type="password" id="pinLoginInput" data-i18n-placeholder="login.placeholder" placeholder="PINコード" autocomplete="off" autocapitalize="off" autocorrect="off" required>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;">ログイン</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;" data-i18n="login.submit">ログイン</button>
     </form>
     <div id="pinLoginStatus"></div>
   </div>
@@ -464,13 +488,18 @@
 <div class="container no-print">
   <!-- Header Card -->
   <div class="header-card">
-    <button class="icon-btn" onclick="openMasterModal()" title="スタッフ・マスタ管理 / Master Settings">⚙️</button>
+    <button class="icon-btn" onclick="openMasterModal()" data-i18n-title="header.masterTitle" title="スタッフ・マスタ管理 / Master Settings">⚙️</button>
     <div class="title-group">
-      <h1>🏆 インセンティブ獲得 リアルタイムボード<br><span style="font-size: 0.9rem; font-weight: normal; color: rgba(255,255,255,0.8);">Incentive Acquisition Management</span></h1>
-      <p>1ページで全員の実績・ランク・レシート証拠をリアルタイム管理</p>
+      <h1><span data-i18n="header.title">🏆 インセンティブ獲得 リアルタイムボード</span><br><span data-i18n="header.subtitleSmall" style="font-size: 0.9rem; font-weight: normal; color: rgba(255,255,255,0.8);">Incentive Acquisition Management</span></h1>
+      <p data-i18n="header.tagline">1ページで全員の実績・ランク・レシート証拠をリアルタイム管理</p>
       <p id="syncStatus" style="font-size: 0.75rem; color: rgba(255,255,255,0.75); margin-top: 2px;">🔌 接続確認中...</p>
+      <div class="lang-switcher" style="margin-top:6px;">
+        <button class="lang-btn" data-lang="ja" onclick="setLanguage('ja')">日本語</button>
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">English</button>
+        <button class="lang-btn" data-lang="ne" onclick="setLanguage('ne')">नेपाली</button>
+      </div>
     </div>
-    <button class="btn btn-secondary no-print" id="backHomeBtn" onclick="showScreen('home')" style="display:none;">🏠 ホームに戻る</button>
+    <button class="btn btn-secondary no-print" id="backHomeBtn" onclick="showScreen('home')" style="display:none;" data-i18n="header.backHome">🏠 ホームに戻る</button>
   </div>
 
   <!-- Home Screen: 4 entrances -->
@@ -478,23 +507,23 @@
     <div class="home-grid">
       <div class="home-tile home-tile-quest" onclick="showScreen('quest')">
         <div class="home-tile-icon">⚔️</div>
-        <div class="home-tile-label">クエスト</div>
-        <div class="home-tile-sub">低頻度タスクを成果報酬で受注</div>
+        <div class="home-tile-label" data-i18n="home.questLabel">クエスト</div>
+        <div class="home-tile-sub" data-i18n="home.questSub">低頻度タスクを成果報酬で受注</div>
       </div>
       <div class="home-tile home-tile-comp" onclick="showScreen('comp')">
         <div class="home-tile-icon">🎨</div>
-        <div class="home-tile-label">コンペ</div>
-        <div class="home-tile-sub">POP・SNS作品コンテスト</div>
+        <div class="home-tile-label" data-i18n="home.compLabel">コンペ</div>
+        <div class="home-tile-sub" data-i18n="home.compSub">POP・SNS作品コンテスト</div>
       </div>
       <div class="home-tile home-tile-acquisition" onclick="showScreen('acquisition')">
         <div class="home-tile-icon">🧾</div>
-        <div class="home-tile-label">獲得表</div>
-        <div class="home-tile-sub">レシート投稿・獲得実績</div>
+        <div class="home-tile-label" data-i18n="home.acquisitionLabel">獲得表</div>
+        <div class="home-tile-sub" data-i18n="home.acquisitionSub">レシート投稿・獲得実績</div>
       </div>
       <div class="home-tile home-tile-reward" onclick="showScreen('reward')">
         <div class="home-tile-icon">🏆</div>
-        <div class="home-tile-label">報酬ランキング</div>
-        <div class="home-tile-sub">累計支給額でランキング</div>
+        <div class="home-tile-label" data-i18n="home.rewardLabel">報酬ランキング</div>
+        <div class="home-tile-sub" data-i18n="home.rewardSub">累計支給額でランキング</div>
       </div>
     </div>
   </div>
@@ -502,42 +531,42 @@
   <!-- Quest Screen -->
   <div id="questScreen" class="screen" style="display:none;">
     <div class="screen-header">
-      <h2>⚔️ クエストボード</h2>
-      <button class="btn btn-secondary" onclick="printReport('quest')">🖨 印刷</button>
+      <h2 data-i18n="quest.screenTitle">⚔️ クエストボード</h2>
+      <button class="btn btn-secondary" onclick="printReport('quest')" data-i18n="quest.printBtn">🖨 印刷</button>
     </div>
     <div class="ranking-card">
       <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
-        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいクエストを発行</div>
-        <div class="form-group"><input type="text" id="taskTitleInput" placeholder="クエスト名（例：トイレ清掃）"></div>
-        <div class="form-group"><input type="text" id="taskDescInput" placeholder="内容・条件（任意）"></div>
-        <div class="form-group"><input type="number" id="taskRewardInput" placeholder="報酬額（円）" min="0"></div>
+        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;" data-i18n="quest.newQuest">+ 新しいクエストを発行</div>
+        <div class="form-group"><input type="text" id="taskTitleInput" data-i18n-placeholder="quest.titlePlaceholder" placeholder="クエスト名（例：トイレ清掃）"></div>
+        <div class="form-group"><input type="text" id="taskDescInput" data-i18n-placeholder="quest.descPlaceholder" placeholder="内容・条件（任意）"></div>
+        <div class="form-group"><input type="number" id="taskRewardInput" data-i18n-placeholder="quest.rewardPlaceholder" placeholder="報酬額（円）" min="0"></div>
 
         <div class="form-group">
-          <label>発注タイプ</label>
+          <label data-i18n="quest.repeatTypeLabel">発注タイプ</label>
           <div style="display:flex; flex-wrap:wrap; gap:14px; font-size:0.85rem; align-items:center;">
             <label style="display:flex; align-items:center; gap:4px; font-weight:normal; white-space:nowrap;">
-              <input type="radio" name="taskRepeatMode" value="once" checked onchange="toggleRepeatIntervalField()"> 単発（履歴から再発注可）
+              <input type="radio" name="taskRepeatMode" value="once" checked onchange="toggleRepeatIntervalField()"> <span data-i18n="quest.repeatOnce">単発（履歴から再発注可）</span>
             </label>
             <label style="display:flex; align-items:center; gap:4px; font-weight:normal; white-space:nowrap;">
-              <input type="radio" name="taskRepeatMode" value="recurring" onchange="toggleRepeatIntervalField()"> 🔁 繰り返し
+              <input type="radio" name="taskRepeatMode" value="recurring" onchange="toggleRepeatIntervalField()"> <span data-i18n="quest.repeatRecurring">🔁 繰り返し</span>
             </label>
           </div>
         </div>
         <div class="form-group" id="repeatIntervalGroup" style="display:none;">
-          <label>クリアから何日後に再発注するか</label>
-          <input type="number" id="taskRepeatIntervalInput" placeholder="例：7（日）" min="1">
+          <label data-i18n="quest.repeatIntervalLabel">クリアから何日後に再発注するか</label>
+          <input type="number" id="taskRepeatIntervalInput" data-i18n-placeholder="quest.repeatIntervalPlaceholder" placeholder="例：7（日）" min="1">
         </div>
 
         <div class="form-group">
-          <label>作業マニュアル（任意・清掃手順など）</label>
-          <textarea id="taskManualTextInput" rows="3" placeholder="手順・注意点など" style="width:100%; padding:8px; border:1.5px solid #ddd6ff; border-radius:8px; box-sizing:border-box; font-size:0.85rem; font-family:inherit;"></textarea>
+          <label data-i18n="quest.manualLabel">作業マニュアル（任意・清掃手順など）</label>
+          <textarea id="taskManualTextInput" rows="3" data-i18n-placeholder="quest.manualPlaceholder" placeholder="手順・注意点など" style="width:100%; padding:8px; border:1.5px solid #ddd6ff; border-radius:8px; box-sizing:border-box; font-size:0.85rem; font-family:inherit;"></textarea>
         </div>
         <div class="form-group">
-          <label>マニュアル画像（任意）</label>
+          <label data-i18n="quest.manualImgLabel">マニュアル画像（任意）</label>
           <input type="file" id="taskManualImgInput" accept="image/*">
         </div>
 
-        <button class="btn-add" onclick="createTask()">発行する</button>
+        <button class="btn-add" onclick="createTask()" data-i18n="quest.publishBtn">発行する</button>
       </div>
       <div id="taskListArea"></div>
     </div>
@@ -546,16 +575,16 @@
   <!-- Contest Screen -->
   <div id="compScreen" class="screen" style="display:none;">
     <div class="screen-header">
-      <h2>🎨 POP/SNSコンペ</h2>
-      <button class="btn btn-secondary" onclick="printReport('comp')">🖨 印刷</button>
+      <h2 data-i18n="comp.screenTitle">🎨 POP/SNSコンペ</h2>
+      <button class="btn btn-secondary" onclick="printReport('comp')" data-i18n="quest.printBtn">🖨 印刷</button>
     </div>
     <div class="ranking-card">
       <div style="background:#f7faf7; border:1px dashed #81c784; border-radius:8px; padding:10px; margin-bottom:12px;">
-        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;">+ 新しいコンペを開催</div>
-        <div class="form-group"><input type="text" id="compTitleInput" placeholder="コンペ名（例：秋のPOPデザイン）"></div>
-        <div class="form-group"><input type="text" id="compDescInput" placeholder="テーマ・条件（任意）"></div>
+        <div style="font-size:0.82rem; font-weight:bold; margin-bottom:6px;" data-i18n="comp.newComp">+ 新しいコンペを開催</div>
+        <div class="form-group"><input type="text" id="compTitleInput" data-i18n-placeholder="comp.titlePlaceholder" placeholder="コンペ名（例：秋のPOPデザイン）"></div>
+        <div class="form-group"><input type="text" id="compDescInput" data-i18n-placeholder="comp.descPlaceholder" placeholder="テーマ・条件（任意）"></div>
         <div class="form-group"><input type="date" id="compDeadlineInput"></div>
-        <button class="btn-add" onclick="createCompetition()">開催する</button>
+        <button class="btn-add" onclick="createCompetition()" data-i18n="comp.startBtn">開催する</button>
       </div>
       <div id="compListArea"></div>
     </div>
@@ -564,20 +593,20 @@
   <!-- Acquisition Screen (獲得表 / レシート投稿) -->
   <div id="acquisitionScreen" class="screen" style="display:none;">
     <div class="screen-header">
-      <h2>🧾 獲得表</h2>
+      <h2 data-i18n="acquisition.screenTitle">🧾 獲得表</h2>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-primary" onclick="openUploadModal()">📷 レシート登録</button>
-        <button class="btn btn-secondary" onclick="printReport('acquisition')">🖨 印刷</button>
+        <button class="btn btn-primary" onclick="openUploadModal()" data-i18n="acquisition.addReceiptBtn">📷 レシート登録</button>
+        <button class="btn btn-secondary" onclick="printReport('acquisition')" data-i18n="quest.printBtn">🖨 印刷</button>
       </div>
     </div>
 
     <div class="toolbar-card">
       <div class="month-select-group">
-        <span>📅 表示月 / Month:</span>
+        <span data-i18n="acquisition.monthLabel">📅 表示月 / Month:</span>
         <select id="monthSelect" onchange="changeMonth(this)"></select>
       </div>
       <div style="font-size: 0.85rem; color: #555;">
-        店舗合計 / Store Total: <b id="total-store-count" style="color: var(--primary); font-size: 1.1rem;">0</b> 件 (cases)
+        <span data-i18n="acquisition.storeTotalLabel">店舗合計 / Store Total:</span> <b id="total-store-count" style="color: var(--primary); font-size: 1.1rem;">0</b> <span data-i18n="acquisition.casesUnit">件 (cases)</span>
       </div>
     </div>
 
@@ -585,13 +614,13 @@
       <table class="rank-table">
         <thead>
           <tr>
-            <th style="width: 8%;">順位<br><span style="font-weight:normal; font-size:0.7rem;">Rank</span></th>
-            <th style="width: 30%;">名前 / ランク<br><span style="font-weight:normal; font-size:0.7rem;">Name / Rank</span></th>
-            <th style="width: 12%;">指示あり<br><span style="font-weight:normal; font-size:0.7rem;">Instructed</span></th>
-            <th style="width: 12%;">自発的<br><span style="font-weight:normal; font-size:0.7rem;">Voluntary</span></th>
-            <th style="width: 10%;">合計<br><span style="font-weight:normal; font-size:0.7rem;">Total</span></th>
-            <th style="width: 16%;">見込支給額<br><span style="font-weight:normal; font-size:0.7rem;">Est. Incentive</span></th>
-            <th style="width: 12%;">証拠確認<br><span style="font-weight:normal; font-size:0.7rem;">Proof</span></th>
+            <th style="width: 8%;" data-i18n="acquisition.thRank">順位</th>
+            <th style="width: 30%;" data-i18n="acquisition.thNameRank">名前 / ランク</th>
+            <th style="width: 12%;" data-i18n="acquisition.thInstructed">指示あり</th>
+            <th style="width: 12%;" data-i18n="acquisition.thVoluntary">自発的</th>
+            <th style="width: 10%;" data-i18n="acquisition.thTotal">合計</th>
+            <th style="width: 16%;" data-i18n="acquisition.thEstIncentive">見込支給額</th>
+            <th style="width: 12%;" data-i18n="acquisition.thProof">証拠確認</th>
           </tr>
         </thead>
         <tbody id="ranking-table-body"></tbody>
@@ -602,17 +631,17 @@
   <!-- Reward Ranking Screen (報酬ランキング：累計金額のみで順位付け) -->
   <div id="rewardScreen" class="screen" style="display:none;">
     <div class="screen-header">
-      <h2>🏆 報酬ランキング</h2>
-      <button class="btn btn-secondary" onclick="printReport('reward')">🖨 印刷</button>
+      <h2 data-i18n="reward.screenTitle">🏆 報酬ランキング</h2>
+      <button class="btn btn-secondary" onclick="printReport('reward')" data-i18n="quest.printBtn">🖨 印刷</button>
     </div>
 
     <div class="toolbar-card">
       <div class="month-select-group">
-        <span>📅 表示月 / Month:</span>
+        <span data-i18n="acquisition.monthLabel">📅 表示月 / Month:</span>
         <select id="monthSelectReward" onchange="changeMonth(this)"></select>
       </div>
       <div style="font-size: 0.85rem; color: #555;">
-        店舗合計支給額 / Total Payout: <b id="total-store-payout" style="color: var(--accent-dark); font-size: 1.1rem;">¥0</b>
+        <span data-i18n="reward.storeTotalPayout">店舗合計支給額 / Total Payout:</span> <b id="total-store-payout" style="color: var(--accent-dark); font-size: 1.1rem;">¥0</b>
       </div>
     </div>
 
@@ -620,12 +649,12 @@
       <table class="rank-table">
         <thead>
           <tr>
-            <th style="width: 10%;">順位<br><span style="font-weight:normal; font-size:0.7rem;">Rank</span></th>
-            <th style="width: 28%;">名前 / ランク<br><span style="font-weight:normal; font-size:0.7rem;">Name / Rank</span></th>
-            <th style="width: 18%;">レシート報酬<br><span style="font-weight:normal; font-size:0.7rem;">Receipts</span></th>
-            <th style="width: 18%;">クエスト報酬<br><span style="font-weight:normal; font-size:0.7rem;">Quests</span></th>
-            <th style="width: 18%;">コンペ賞金<br><span style="font-weight:normal; font-size:0.7rem;">Contests</span></th>
-            <th style="width: 18%;">合計支給額<br><span style="font-weight:normal; font-size:0.7rem;">Total</span></th>
+            <th style="width: 10%;" data-i18n="acquisition.thRank">順位</th>
+            <th style="width: 28%;" data-i18n="acquisition.thNameRank">名前 / ランク</th>
+            <th style="width: 18%;" data-i18n="reward.thReceiptReward">レシート報酬</th>
+            <th style="width: 18%;" data-i18n="reward.thQuestReward">クエスト報酬</th>
+            <th style="width: 18%;" data-i18n="reward.thCompReward">コンペ賞金</th>
+            <th style="width: 18%;" data-i18n="reward.thTotalPayout">合計支給額</th>
           </tr>
         </thead>
         <tbody id="reward-ranking-table-body"></tbody>
@@ -637,36 +666,39 @@
 <!-- Upload Receipt Modal -->
 <div class="modal no-print" id="uploadModal">
   <div class="modal-content">
-    <h3>📷 獲得レシート登録 / Add Receipt</h3>
-    
+    <h3 data-i18n="upload.title">📷 獲得レシート登録 / Add Receipt</h3>
+
     <div class="form-group">
-      <label>スタッフ名 / Staff Name</label>
-      <input type="text" id="staffNameInput" list="staffDatalist" placeholder="名前を入力または選択" onchange="onStaffNameChange()">
+      <label data-i18n="upload.staffNameLabel">スタッフ名 / Staff Name</label>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="staffNameInput" list="staffDatalist" data-i18n-placeholder="upload.staffNamePlaceholder" placeholder="名前を入力または選択" onchange="onStaffNameChange()" style="flex:1;">
+        <button type="button" class="btn-receipt" style="white-space:nowrap;" onclick="fillGuestName('staffNameInput')" data-i18n="common.guestJoin">🧑 ゲストとして参加</button>
+      </div>
       <datalist id="staffDatalist"></datalist>
     </div>
 
     <div class="form-group">
-      <label>スタッフランク（単価） / Current Rank</label>
+      <label data-i18n="upload.rankLabel">スタッフランク（単価） / Current Rank</label>
       <select id="staffRankSelect"></select>
-      <span style="font-size: 0.72rem; color: var(--accent);">※ランク昇格時はここで変更するとマスタ情報も自動上書きされます。</span>
+      <span style="font-size: 0.72rem; color: var(--accent);" data-i18n="upload.rankNote">※ランク昇格時はここで変更するとマスタ情報も自動上書きされます。</span>
     </div>
 
     <div class="form-group">
-      <label>活動区分 / Activity Type</label>
+      <label data-i18n="upload.activityLabel">活動区分 / Activity Type</label>
       <select id="workType">
-        <option value="指示あり">指示あり / Instructed (時給あり / Paid)</option>
-        <option value="自発的">自発的 / Voluntary (時給なし / Unpaid)</option>
+        <option value="指示あり" data-i18n="upload.activityInstructed">指示あり / Instructed (時給あり / Paid)</option>
+        <option value="自発的" data-i18n="upload.activityVoluntary">自発的 / Voluntary (時給なし / Unpaid)</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label>レシート写真添付 / Upload Receipt Photo</label>
+      <label data-i18n="upload.photoLabel">レシート写真添付 / Upload Receipt Photo</label>
       <input type="file" id="receiptImg" accept="image/*">
     </div>
 
     <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px;">
-      <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('uploadModal')">キャンセル / Cancel</button>
-      <button class="btn btn-primary" id="submitBtn" style="padding: 8px 16px; border-radius: 6px;" onclick="submitAcquisition()">登録する / Submit</button>
+      <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('uploadModal')" data-i18n="upload.cancelBtn">キャンセル / Cancel</button>
+      <button class="btn btn-primary" id="submitBtn" style="padding: 8px 16px; border-radius: 6px;" onclick="submitAcquisition()" data-i18n="upload.submitBtn">登録する / Submit</button>
     </div>
   </div>
 </div>
@@ -674,46 +706,46 @@
 <!-- Master & Staff Management Modal -->
 <div class="modal no-print" id="masterModal">
   <div class="modal-content">
-    <h3>⚙️ マスタ＆スタッフ管理 / Master Settings</h3>
-    
-    <h4 style="margin:10px 0 6px 0; font-size:0.9rem; color:var(--secondary);">1. ランク名・支給単価の設定（追加・編集）</h4>
+    <h3 data-i18n="master.title">⚙️ マスタ＆スタッフ管理 / Master Settings</h3>
+
+    <h4 style="margin:10px 0 6px 0; font-size:0.9rem; color:var(--secondary);" data-i18n="master.rankSectionTitle">1. ランク名・支給単価の設定（追加・編集）</h4>
     <table style="width:100%; font-size:0.82rem; border-collapse:collapse; margin-bottom:6px;">
       <thead>
         <tr style="background:#f0f0f0;">
-          <th style="padding:6px; border:1px solid #ccc; width:55%;">ランク名</th>
-          <th style="padding:6px; border:1px solid #ccc; width:30%;">単価 (円)</th>
-          <th style="padding:6px; border:1px solid #ccc; width:15%;">操作</th>
+          <th style="padding:6px; border:1px solid #ccc; width:55%;" data-i18n="master.thRankName">ランク名</th>
+          <th style="padding:6px; border:1px solid #ccc; width:30%;" data-i18n="master.thRate">単価 (円)</th>
+          <th style="padding:6px; border:1px solid #ccc; width:15%;" data-i18n="master.thAction">操作</th>
         </tr>
       </thead>
       <tbody id="masterTableBody"></tbody>
     </table>
-    <button class="btn-add" onclick="addNewRankRow()">+ 新しいランクを追加</button>
+    <button class="btn-add" onclick="addNewRankRow()" data-i18n="master.addRankBtn">+ 新しいランクを追加</button>
 
-    <h4 style="margin:16px 0 6px 0; font-size:0.9rem; color:var(--secondary);">2. 登録スタッフ一覧・削除（退職処理）</h4>
+    <h4 style="margin:16px 0 6px 0; font-size:0.9rem; color:var(--secondary);" data-i18n="master.staffSectionTitle">2. 登録スタッフ一覧・削除（退職処理）</h4>
     <table style="width:100%; font-size:0.82rem; border-collapse:collapse; margin-bottom:12px;">
       <thead>
         <tr style="background:#f0f0f0;">
-          <th style="padding:6px; border:1px solid #ccc;">スタッフ名</th>
-          <th style="padding:6px; border:1px solid #ccc;">現在のランク</th>
-          <th style="padding:6px; border:1px solid #ccc;">操作</th>
+          <th style="padding:6px; border:1px solid #ccc;" data-i18n="master.thStaffName">スタッフ名</th>
+          <th style="padding:6px; border:1px solid #ccc;" data-i18n="master.thCurrentRank">現在のランク</th>
+          <th style="padding:6px; border:1px solid #ccc;" data-i18n="master.thAction">操作</th>
         </tr>
       </thead>
       <tbody id="staffManagerTableBody"></tbody>
     </table>
 
     <div id="usageSection" style="display:none;">
-      <h4 style="margin:16px 0 6px 0; font-size:0.9rem; color:var(--secondary);">3. Firestore無料枠 使用量確認</h4>
-      <p style="font-size:0.75rem; color:#666; margin:0 0 6px 0;">
+      <h4 style="margin:16px 0 6px 0; font-size:0.9rem; color:var(--secondary);" data-i18n="master.usageSectionTitle">3. Firestore無料枠 使用量確認</h4>
+      <p style="font-size:0.75rem; color:#666; margin:0 0 6px 0;" data-i18n="master.usageNote">
         レシート画像はFirebase Storageではなく、圧縮した上でFirestore（無料のSparkプラン）に直接保存しています。
         無料枠（データ容量 合計1GB）に対してあとどれくらい保存できそうか確認できます。
       </p>
-      <button class="btn-add" id="checkUsageBtn" onclick="checkStorageUsage()">📊 使用量を確認する</button>
+      <button class="btn-add" id="checkUsageBtn" onclick="checkStorageUsage()" data-i18n="master.checkUsageBtn">📊 使用量を確認する</button>
       <div id="usageResult" style="font-size:0.82rem; margin-top:8px; line-height:1.6;"></div>
     </div>
 
     <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top:16px;">
-      <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('masterModal')">閉じる / Close</button>
-      <button class="btn btn-primary" id="saveMasterBtn" style="padding: 8px 16px; border-radius: 6px;" onclick="saveMasterSettings()">保存 / Save</button>
+      <button style="padding: 8px 16px; border: none; background: #ccc; border-radius: 6px;" onclick="closeModal('masterModal')" data-i18n="master.closeBtn">閉じる / Close</button>
+      <button class="btn btn-primary" id="saveMasterBtn" style="padding: 8px 16px; border-radius: 6px;" onclick="saveMasterSettings()" data-i18n="master.saveBtn">保存 / Save</button>
     </div>
   </div>
 </div>
@@ -801,6 +833,637 @@
   const MAX_IMAGE_DATA_URL_BYTES = 700 * 1024;
 
   const PLACEHOLDER_IMG = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='100'%3E%3Crect width='100%25' height='100%25' fill='%23333'/%3E%3Ctext x='50%25' y='50%25' fill='white' font-size='14' text-anchor='middle' dominant-baseline='middle' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+  // ============================================================
+  // 多言語対応 (日本語 / English / नेपाली)
+  // ============================================================
+  const I18N = {
+    ja: {
+      login: {
+        title: "🔒 ログイン",
+        prompt: "共通のPINコードを入力してください。",
+        placeholder: "PINコード",
+        submit: "ログイン",
+        loggingIn: "ログイン中...",
+        wrongPin: "PINコードが違います"
+      },
+      header: {
+        title: "🏆 インセンティブ獲得 リアルタイムボード",
+        subtitleSmall: "Incentive Acquisition Management",
+        tagline: "1ページで全員の実績・ランク・レシート証拠をリアルタイム管理",
+        masterTitle: "スタッフ・マスタ管理 / Master Settings",
+        backHome: "🏠 ホームに戻る"
+      },
+      sync: {
+        connecting: "接続確認中...",
+        pinRequired: "PINコードを入力してください",
+        connected: "Firebase 連携中 (リアルタイム同期)",
+        connectError: "Firebase接続エラー（ローカルのみで動作）",
+        sdkLoadError: "Firebase SDKの読み込みに失敗しました（ローカルのみで動作中）",
+        localOnly: "ローカルのみ動作中（Firebase未設定）",
+        syncError: "同期エラー"
+      },
+      home: {
+        questLabel: "クエスト", questSub: "低頻度タスクを成果報酬で受注",
+        compLabel: "コンペ", compSub: "POP・SNS作品コンテスト",
+        acquisitionLabel: "獲得表", acquisitionSub: "レシート投稿・獲得実績",
+        rewardLabel: "報酬ランキング", rewardSub: "累計支給額でランキング"
+      },
+      quest: {
+        screenTitle: "⚔️ クエストボード",
+        printBtn: "🖨 印刷",
+        newQuest: "+ 新しいクエストを発行",
+        titlePlaceholder: "クエスト名（例：トイレ清掃）",
+        descPlaceholder: "内容・条件（任意）",
+        rewardPlaceholder: "報酬額（円）",
+        repeatTypeLabel: "発注タイプ",
+        repeatOnce: "単発（履歴から再発注可）",
+        repeatRecurring: "🔁 繰り返し",
+        repeatIntervalLabel: "クリアから何日後に再発注するか",
+        repeatIntervalPlaceholder: "例：7（日）",
+        manualLabel: "作業マニュアル（任意・清掃手順など）",
+        manualPlaceholder: "手順・注意点など",
+        manualImgLabel: "マニュアル画像（任意）",
+        publishBtn: "発行する",
+        sectionOpen: "📜 受注可能なクエスト",
+        sectionClaimed: "⚔️ 挑戦中のクエスト",
+        sectionSubmitted: "📝 報告済み・承認待ち",
+        sectionHistory: "🏅 達成履歴（直近{{n}}件）",
+        emptyOpen: "現在受注できるクエストはありません",
+        emptyClaimed: "挑戦中のクエストはありません",
+        emptySubmitted: "承認待ちのクエストはありません",
+        emptyHistory: "まだ達成したクエストはありません",
+        claimBtn: "⚔️ クエストを受注する！",
+        cancelBtn: "取消",
+        challengerLabel: "挑戦者",
+        reportBtn: "📮 達成報告",
+        reportNotePlaceholder: "達成メモ（任意）",
+        proofImgLabel: "証拠写真（任意）",
+        submitReportBtn: "報告する",
+        memoLabel: "メモ",
+        approveBtn: "👍 承認する（報酬確定）",
+        doneLabel: "🏅 達成済み",
+        nextSpawned: "🔁 次のクエストは発行済みです",
+        nextDue: "🔁 {{date}} 頃に自動で再発注されます",
+        reorderBtn: "🔁 再発注する",
+        manualViewBtn: "📖 マニュアルを見る",
+        repeatBadge: "🔁 {{n}}日ごと",
+        promptClaim: "受注者名を入力してください（空欄でゲストとして受注） / Enter your name",
+        alreadyClaimed: "すでに他のスタッフが担当しています。",
+        claimFailed: "担当登録に失敗しました。",
+        reportFailed: "完了報告に失敗しました。",
+        approveConfirm: "このクエストを承認し、報酬を確定しますか？",
+        approveFailed: "承認に失敗しました。",
+        cancelConfirm: "このクエストを取り消しますか？",
+        cancelFailed: "取消に失敗しました。",
+        reorderConfirm: "「{{title}}」を同じ内容で再発注しますか？",
+        reorderFailed: "再発注に失敗しました。",
+        titleRequired: "クエスト名を入力してください",
+        rewardRequired: "報酬額を入力してください",
+        intervalRequired: "再発注までの日数を入力してください",
+        postFailed: "クエストの発行に失敗しました。"
+      },
+      comp: {
+        screenTitle: "🎨 POP/SNSコンペ",
+        newComp: "+ 新しいコンペを開催",
+        titlePlaceholder: "コンペ名（例：秋のPOPデザイン）",
+        descPlaceholder: "テーマ・条件（任意）",
+        startBtn: "開催する",
+        statusOpen: "募集中",
+        statusClosed: "終了",
+        deadlineLabel: "締切",
+        noEntries: "まだ応募はありません",
+        entryBtn: "📤 作品を応募する",
+        closeBtn: "このコンペを終了する",
+        nameInputPlaceholder: "スタッフ名",
+        imageEntryLabel: "画像で応募する場合",
+        linkEntryLabel: "動画/SNS投稿のURLで応募する場合",
+        commentPlaceholder: "コメント（任意）",
+        submitEntryBtn: "応募する",
+        winnerLabel: "🏆 優勝",
+        chooseWinnerBtn: "🏆 優勝に選ぶ",
+        noContests: "開催中のコンペはありません",
+        closedHistory: "終了したコンペ（直近{{n}}件）",
+        nameRequired: "スタッフ名を入力してください",
+        entryTypeRequired: "画像またはリンクのどちらかを入力してください",
+        entrySubmitFailed: "応募に失敗しました。",
+        compTitleRequired: "コンペ名を入力してください",
+        compStartFailed: "コンペの開催に失敗しました。",
+        prizePrompt: "賞金額(円)を入力してください",
+        prizeInvalid: "正しい金額を入力してください",
+        winnerSetFailed: "優勝設定に失敗しました。",
+        closeConfirm: "このコンペを終了しますか？（応募の受付を締め切ります）",
+        closeFailed: "終了処理に失敗しました。"
+      },
+      acquisition: {
+        screenTitle: "🧾 獲得表",
+        addReceiptBtn: "📷 レシート登録",
+        monthLabel: "📅 表示月 / Month:",
+        storeTotalLabel: "店舗合計 / Store Total:",
+        casesUnit: "件 (cases)",
+        thRank: "順位", thNameRank: "名前 / ランク", thInstructed: "指示あり",
+        thVoluntary: "自発的", thTotal: "合計", thEstIncentive: "見込支給額", thProof: "証拠確認",
+        receiptsOf: "の提出レシート証拠 / Receipts",
+        noReceipts: "レシートなし / No receipts",
+        sheetsCount: "{{n}}枚",
+        paidLabel: "Paid", unpaidLabel: "Unpaid"
+      },
+      reward: {
+        screenTitle: "🏆 報酬ランキング",
+        storeTotalPayout: "店舗合計支給額 / Total Payout:",
+        thReceiptReward: "レシート報酬", thQuestReward: "クエスト報酬",
+        thCompReward: "コンペ賞金", thTotalPayout: "合計支給額"
+      },
+      upload: {
+        title: "📷 獲得レシート登録 / Add Receipt",
+        staffNameLabel: "スタッフ名 / Staff Name",
+        staffNamePlaceholder: "名前を入力または選択",
+        rankLabel: "スタッフランク（単価） / Current Rank",
+        rankNote: "※ランク昇格時はここで変更するとマスタ情報も自動上書きされます。",
+        activityLabel: "活動区分 / Activity Type",
+        activityInstructed: "指示あり / Instructed (時給あり / Paid)",
+        activityVoluntary: "自発的 / Voluntary (時給なし / Unpaid)",
+        photoLabel: "レシート写真添付 / Upload Receipt Photo",
+        cancelBtn: "キャンセル / Cancel",
+        submitBtn: "登録する / Submit",
+        nameRequired: "スタッフ名を入力してください / Please enter staff name",
+        compressing: "画像を圧縮中...",
+        submitting: "送信中...",
+        submitFailed: "登録に失敗しました。通信状況をご確認の上、再度お試しください。"
+      },
+      master: {
+        title: "⚙️ マスタ＆スタッフ管理 / Master Settings",
+        rankSectionTitle: "1. ランク名・支給単価の設定（追加・編集）",
+        thRankName: "ランク名", thRate: "単価 (円)", thAction: "操作",
+        addRankBtn: "+ 新しいランクを追加",
+        staffSectionTitle: "2. 登録スタッフ一覧・削除（退職処理）",
+        thStaffName: "スタッフ名", thCurrentRank: "現在のランク",
+        deleteBtn: "削除", deleteStaffBtn: "削除 (退職)",
+        closeBtn: "閉じる / Close", saveBtn: "保存 / Save", saving: "保存中...",
+        rankLabelInputPlaceholder: "ランク名を入力",
+        minRankRequired: "最低1つのランクが必要です。",
+        deleteStaffConfirm: "スタッフ「{{name}}」さんをマスターから削除しますか？",
+        deleteStaffFailed: "削除に失敗しました。通信状況をご確認ください。",
+        rankNameRequired: "ランク名を入力してください。",
+        saveFirebaseSuccess: "ランクマスタをFirebaseに保存・同期しました！",
+        saveLocalSuccess: "マスタ設定を保存しました（ローカル）",
+        saveFailed: "保存に失敗しました。通信状況をご確認の上、再度お試しください。",
+        usageSectionTitle: "3. Firestore無料枠 使用量確認",
+        usageNote: "レシート画像はFirebase Storageではなく、圧縮した上でFirestore（無料のSparkプラン）に直接保存しています。無料枠（データ容量 合計1GB）に対してあとどれくらい保存できそうか確認できます。",
+        checkUsageBtn: "📊 使用量を確認する",
+        checkingUsage: "集計中...",
+        usageResult: "登録件数: <b>{{count}}</b> 件（画像あり: <b>{{imageCount}}</b> 枚）<br>画像の推定使用量: <b>{{usedMB}} MB</b> / 無料枠 約1024 MB（<b>{{usedPercent}}%</b>）<br>{{remaining}}",
+        usageRemainingKnown: "現在の平均画像サイズ（約{{avgKB}}KB/枚）なら、あと約 <b>{{remainingImages}}枚</b> 保存できる見込みです。",
+        usageRemainingUnknown: "画像がまだ登録されていないため、保存可能枚数の見積もりはできません。",
+        usageFetchFailed: "使用量の取得に失敗しました。通信状況をご確認ください。"
+      },
+      common: {
+        guestJoin: "🧑 ゲストとして参加",
+        guestBadge: "🧑 ゲスト",
+        currentMonthSuffix: " ★今月 / Current",
+        questShort: "クエスト", compShort: "コンペ", notSet: "未設定"
+      }
+    },
+    en: {
+      login: {
+        title: "🔒 Login",
+        prompt: "Please enter the shared PIN code.",
+        placeholder: "PIN code",
+        submit: "Log in",
+        loggingIn: "Logging in...",
+        wrongPin: "Incorrect PIN code"
+      },
+      header: {
+        title: "🏆 Incentive Acquisition Real-time Board",
+        subtitleSmall: "Real-time Incentive Board",
+        tagline: "Manage everyone's results, rank, and receipt proof in real time on one page",
+        masterTitle: "Staff & Master Settings",
+        backHome: "🏠 Back to Home"
+      },
+      sync: {
+        connecting: "Checking connection...",
+        pinRequired: "Please enter the PIN code",
+        connected: "Firebase connected (real-time sync)",
+        connectError: "Firebase connection error (running locally only)",
+        sdkLoadError: "Failed to load Firebase SDK (running locally only)",
+        localOnly: "Running locally only (Firebase not configured)",
+        syncError: "Sync error"
+      },
+      home: {
+        questLabel: "Quests", questSub: "Take on occasional tasks for performance-based pay",
+        compLabel: "Contests", compSub: "POP & social media content contests",
+        acquisitionLabel: "Acquisitions", acquisitionSub: "Submit receipts & track results",
+        rewardLabel: "Reward Ranking", rewardSub: "Ranked by total payout"
+      },
+      quest: {
+        screenTitle: "⚔️ Quest Board",
+        printBtn: "🖨 Print",
+        newQuest: "+ Post a new quest",
+        titlePlaceholder: "Quest name (e.g. Clean the restroom)",
+        descPlaceholder: "Details / conditions (optional)",
+        rewardPlaceholder: "Reward amount (¥)",
+        repeatTypeLabel: "Quest type",
+        repeatOnce: "One-off (can re-order from history)",
+        repeatRecurring: "🔁 Recurring",
+        repeatIntervalLabel: "Days after completion to re-order",
+        repeatIntervalPlaceholder: "e.g. 7 (days)",
+        manualLabel: "Work manual (optional, e.g. cleaning steps)",
+        manualPlaceholder: "Steps, notes, etc.",
+        manualImgLabel: "Manual image (optional)",
+        publishBtn: "Post",
+        sectionOpen: "📜 Available Quests",
+        sectionClaimed: "⚔️ In Progress",
+        sectionSubmitted: "📝 Reported / Awaiting Approval",
+        sectionHistory: "🏅 Completed History (last {{n}})",
+        emptyOpen: "No quests available right now",
+        emptyClaimed: "No quests in progress",
+        emptySubmitted: "No quests awaiting approval",
+        emptyHistory: "No completed quests yet",
+        claimBtn: "⚔️ Take this quest!",
+        cancelBtn: "Cancel",
+        challengerLabel: "Assigned to",
+        reportBtn: "📮 Report Completion",
+        reportNotePlaceholder: "Completion note (optional)",
+        proofImgLabel: "Proof photo (optional)",
+        submitReportBtn: "Submit report",
+        memoLabel: "Note",
+        approveBtn: "👍 Approve (confirm reward)",
+        doneLabel: "🏅 Completed",
+        nextSpawned: "🔁 The next quest has already been posted",
+        nextDue: "🔁 Will auto re-order around {{date}}",
+        reorderBtn: "🔁 Re-order",
+        manualViewBtn: "📖 View Manual",
+        repeatBadge: "🔁 every {{n}} days",
+        promptClaim: "Enter your name (leave blank to join as Guest)",
+        alreadyClaimed: "Another staff member has already taken this.",
+        claimFailed: "Failed to register as assignee.",
+        reportFailed: "Failed to submit completion report.",
+        approveConfirm: "Approve this quest and confirm the reward?",
+        approveFailed: "Failed to approve.",
+        cancelConfirm: "Cancel this quest?",
+        cancelFailed: "Failed to cancel.",
+        reorderConfirm: "Re-order \"{{title}}\" with the same details?",
+        reorderFailed: "Failed to re-order.",
+        titleRequired: "Please enter a quest name",
+        rewardRequired: "Please enter a reward amount",
+        intervalRequired: "Please enter the number of days until re-order",
+        postFailed: "Failed to post the quest."
+      },
+      comp: {
+        screenTitle: "🎨 POP/SNS Contest",
+        newComp: "+ Start a new contest",
+        titlePlaceholder: "Contest name (e.g. Autumn POP Design)",
+        descPlaceholder: "Theme / conditions (optional)",
+        startBtn: "Start",
+        statusOpen: "Open",
+        statusClosed: "Closed",
+        deadlineLabel: "Deadline",
+        noEntries: "No entries yet",
+        entryBtn: "📤 Submit an entry",
+        closeBtn: "End this contest",
+        nameInputPlaceholder: "Staff name",
+        imageEntryLabel: "If submitting an image",
+        linkEntryLabel: "If submitting a video/SNS post URL",
+        commentPlaceholder: "Comment (optional)",
+        submitEntryBtn: "Submit",
+        winnerLabel: "🏆 Winner",
+        chooseWinnerBtn: "🏆 Select as Winner",
+        noContests: "No contests currently open",
+        closedHistory: "Closed contests (last {{n}})",
+        nameRequired: "Please enter a staff name",
+        entryTypeRequired: "Please provide either an image or a link",
+        entrySubmitFailed: "Failed to submit entry.",
+        compTitleRequired: "Please enter a contest name",
+        compStartFailed: "Failed to start the contest.",
+        prizePrompt: "Enter the prize amount (¥)",
+        prizeInvalid: "Please enter a valid amount",
+        winnerSetFailed: "Failed to set the winner.",
+        closeConfirm: "End this contest? (No more entries will be accepted)",
+        closeFailed: "Failed to close the contest."
+      },
+      acquisition: {
+        screenTitle: "🧾 Acquisitions",
+        addReceiptBtn: "📷 Add Receipt",
+        monthLabel: "📅 Month:",
+        storeTotalLabel: "Store Total:",
+        casesUnit: "cases",
+        thRank: "Rank", thNameRank: "Name / Rank", thInstructed: "Instructed",
+        thVoluntary: "Voluntary", thTotal: "Total", thEstIncentive: "Est. Incentive", thProof: "Proof",
+        receiptsOf: "'s submitted receipts",
+        noReceipts: "No receipts",
+        sheetsCount: "{{n}} photos",
+        paidLabel: "Paid", unpaidLabel: "Unpaid"
+      },
+      reward: {
+        screenTitle: "🏆 Reward Ranking",
+        storeTotalPayout: "Total Payout:",
+        thReceiptReward: "Receipts", thQuestReward: "Quests",
+        thCompReward: "Contests", thTotalPayout: "Total"
+      },
+      upload: {
+        title: "📷 Add Receipt",
+        staffNameLabel: "Staff Name",
+        staffNamePlaceholder: "Enter or select a name",
+        rankLabel: "Current Rank",
+        rankNote: "Note: Changing this at promotion time also updates the master record automatically.",
+        activityLabel: "Activity Type",
+        activityInstructed: "Instructed (Paid)",
+        activityVoluntary: "Voluntary (Unpaid)",
+        photoLabel: "Upload Receipt Photo",
+        cancelBtn: "Cancel",
+        submitBtn: "Submit",
+        nameRequired: "Please enter staff name",
+        compressing: "Compressing image...",
+        submitting: "Submitting...",
+        submitFailed: "Failed to submit. Please check your connection and try again."
+      },
+      master: {
+        title: "⚙️ Master Settings",
+        rankSectionTitle: "1. Rank names & pay rates (add / edit)",
+        thRankName: "Rank name", thRate: "Rate (¥)", thAction: "Action",
+        addRankBtn: "+ Add a new rank",
+        staffSectionTitle: "2. Registered staff & removal",
+        thStaffName: "Staff name", thCurrentRank: "Current rank",
+        deleteBtn: "Delete", deleteStaffBtn: "Remove (left)",
+        closeBtn: "Close", saveBtn: "Save", saving: "Saving...",
+        rankLabelInputPlaceholder: "Enter rank name",
+        minRankRequired: "At least one rank is required.",
+        deleteStaffConfirm: "Remove staff \"{{name}}\" from the master list?",
+        deleteStaffFailed: "Failed to delete. Please check your connection.",
+        rankNameRequired: "Please enter a rank name.",
+        saveFirebaseSuccess: "Rank master saved and synced to Firebase!",
+        saveLocalSuccess: "Master settings saved (local)",
+        saveFailed: "Failed to save. Please check your connection and try again.",
+        usageSectionTitle: "3. Firestore Free-tier Usage",
+        usageNote: "Receipt images are compressed and stored directly in Firestore (free Spark plan) instead of Firebase Storage. Check here how much of the free tier (1GB total) is left.",
+        checkUsageBtn: "📊 Check usage",
+        checkingUsage: "Calculating...",
+        usageResult: "Registered: <b>{{count}}</b> (with images: <b>{{imageCount}}</b>)<br>Estimated image usage: <b>{{usedMB}} MB</b> / free tier ~1024 MB (<b>{{usedPercent}}%</b>)<br>{{remaining}}",
+        usageRemainingKnown: "At the current average image size (about {{avgKB}}KB each), you can store roughly <b>{{remainingImages}} more</b>.",
+        usageRemainingUnknown: "No images registered yet, so remaining capacity can't be estimated.",
+        usageFetchFailed: "Failed to fetch usage. Please check your connection."
+      },
+      common: {
+        guestJoin: "🧑 Join as Guest",
+        guestBadge: "🧑 Guest",
+        currentMonthSuffix: " ★ Current",
+        questShort: "Quest", compShort: "Contest", notSet: "Not set"
+      }
+    },
+    ne: {
+      login: {
+        title: "🔒 लगइन",
+        prompt: "कृपया साझा PIN कोड प्रविष्ट गर्नुहोस्।",
+        placeholder: "PIN कोड",
+        submit: "लगइन गर्नुहोस्",
+        loggingIn: "लगइन हुँदैछ...",
+        wrongPin: "PIN कोड मिलेन"
+      },
+      header: {
+        title: "🏆 इन्सेन्टिभ प्राप्ति रियल-टाइम बोर्ड",
+        subtitleSmall: "रियल-टाइम इन्सेन्टिभ बोर्ड",
+        tagline: "एउटै पेजमा सबैको प्रदर्शन, र‍्याङ्क, र रसिद प्रमाण रियल-टाइममा व्यवस्थापन गर्नुहोस्",
+        masterTitle: "स्टाफ तथा मास्टर सेटिङ",
+        backHome: "🏠 गृहपृष्ठमा फर्कनुहोस्"
+      },
+      sync: {
+        connecting: "जडान जाँच हुँदैछ...",
+        pinRequired: "कृपया PIN कोड प्रविष्ट गर्नुहोस्",
+        connected: "Firebase जोडिएको (रियल-टाइम सिंक)",
+        connectError: "Firebase जडान त्रुटि (स्थानीय रूपमा मात्र चलिरहेको)",
+        sdkLoadError: "Firebase SDK लोड हुन सकेन (स्थानीय रूपमा मात्र चलिरहेको)",
+        localOnly: "स्थानीय रूपमा मात्र चलिरहेको (Firebase सेटअप गरिएको छैन)",
+        syncError: "सिंक त्रुटि"
+      },
+      home: {
+        questLabel: "क्वेस्ट", questSub: "कम आवृत्तिका कामहरू प्रदर्शन-आधारित ज्यालामा लिनुहोस्",
+        compLabel: "प्रतियोगिता", compSub: "POP र सामाजिक सञ्जाल सामग्री प्रतियोगिता",
+        acquisitionLabel: "प्राप्ति तालिका", acquisitionSub: "रसिद पेश गर्नुहोस् र प्रदर्शन हेर्नुहोस्",
+        rewardLabel: "पुरस्कार र‍्याङ्किङ", rewardSub: "कुल भुक्तानीको आधारमा र‍्याङ्किङ"
+      },
+      quest: {
+        screenTitle: "⚔️ क्वेस्ट बोर्ड",
+        printBtn: "🖨 प्रिन्ट",
+        newQuest: "+ नयाँ क्वेस्ट पोस्ट गर्नुहोस्",
+        titlePlaceholder: "क्वेस्टको नाम (उदाहरण: शौचालय सफा गर्ने)",
+        descPlaceholder: "विवरण/सर्तहरू (वैकल्पिक)",
+        rewardPlaceholder: "इनाम रकम (¥)",
+        repeatTypeLabel: "क्वेस्ट प्रकार",
+        repeatOnce: "एकपटके (इतिहासबाट फेरि अर्डर गर्न सकिने)",
+        repeatRecurring: "🔁 दोहोरिने",
+        repeatIntervalLabel: "पूरा भएको कति दिनपछि फेरि अर्डर गर्ने",
+        repeatIntervalPlaceholder: "उदाहरण: ७ (दिन)",
+        manualLabel: "कार्य म्यानुअल (वैकल्पिक, जस्तै सफाइ चरणहरू)",
+        manualPlaceholder: "चरणहरू, ध्यान दिनुपर्ने कुराहरू आदि",
+        manualImgLabel: "म्यानुअल तस्बिर (वैकल्पिक)",
+        publishBtn: "पोस्ट गर्नुहोस्",
+        sectionOpen: "📜 उपलब्ध क्वेस्टहरू",
+        sectionClaimed: "⚔️ जारी रहेका क्वेस्टहरू",
+        sectionSubmitted: "📝 रिपोर्ट गरिएको / स्वीकृतिको पर्खाइमा",
+        sectionHistory: "🏅 पूरा भएको इतिहास (पछिल्लो {{n}})",
+        emptyOpen: "अहिले कुनै क्वेस्ट उपलब्ध छैन",
+        emptyClaimed: "हाल कुनै क्वेस्ट जारी छैन",
+        emptySubmitted: "स्वीकृतिको पर्खाइमा कुनै क्वेस्ट छैन",
+        emptyHistory: "अहिलेसम्म कुनै क्वेस्ट पूरा भएको छैन",
+        claimBtn: "⚔️ यो क्वेस्ट लिनुहोस्!",
+        cancelBtn: "रद्द गर्नुहोस्",
+        challengerLabel: "जिम्मा लिने",
+        reportBtn: "📮 पूरा भएको रिपोर्ट गर्नुहोस्",
+        reportNotePlaceholder: "पूरा भएको टिप्पणी (वैकल्पिक)",
+        proofImgLabel: "प्रमाण फोटो (वैकल्पिक)",
+        submitReportBtn: "रिपोर्ट पेश गर्नुहोस्",
+        memoLabel: "टिप्पणी",
+        approveBtn: "👍 स्वीकृत गर्नुहोस् (इनाम पुष्टि)",
+        doneLabel: "🏅 पूरा भयो",
+        nextSpawned: "🔁 अर्को क्वेस्ट पहिले नै पोस्ट गरिएको छ",
+        nextDue: "🔁 लगभग {{date}} मा स्वतः फेरि अर्डर हुनेछ",
+        reorderBtn: "🔁 फेरि अर्डर गर्नुहोस्",
+        manualViewBtn: "📖 म्यानुअल हेर्नुहोस्",
+        repeatBadge: "🔁 हरेक {{n}} दिनमा",
+        promptClaim: "आफ्नो नाम प्रविष्ट गर्नुहोस् (अतिथिको रूपमा लिन खाली छोड्नुहोस्)",
+        alreadyClaimed: "अर्को स्टाफले पहिले नै यो लिइसक्यो।",
+        claimFailed: "जिम्मा दर्ता गर्न असफल भयो।",
+        reportFailed: "पूरा भएको रिपोर्ट पेश गर्न असफल भयो।",
+        approveConfirm: "यो क्वेस्ट स्वीकृत गरी इनाम पुष्टि गर्ने हो?",
+        approveFailed: "स्वीकृत गर्न असफल भयो।",
+        cancelConfirm: "यो क्वेस्ट रद्द गर्ने हो?",
+        cancelFailed: "रद्द गर्न असफल भयो।",
+        reorderConfirm: "\"{{title}}\" उही विवरणसहित फेरि अर्डर गर्ने हो?",
+        reorderFailed: "फेरि अर्डर गर्न असफल भयो।",
+        titleRequired: "कृपया क्वेस्टको नाम प्रविष्ट गर्नुहोस्",
+        rewardRequired: "कृपया इनाम रकम प्रविष्ट गर्नुहोस्",
+        intervalRequired: "फेरि अर्डर गर्ने दिनको संख्या प्रविष्ट गर्नुहोस्",
+        postFailed: "क्वेस्ट पोस्ट गर्न असफल भयो।"
+      },
+      comp: {
+        screenTitle: "🎨 POP/SNS प्रतियोगिता",
+        newComp: "+ नयाँ प्रतियोगिता सुरु गर्नुहोस्",
+        titlePlaceholder: "प्रतियोगिताको नाम (उदाहरण: शरद POP डिजाइन)",
+        descPlaceholder: "विषय/सर्तहरू (वैकल्पिक)",
+        startBtn: "सुरु गर्नुहोस्",
+        statusOpen: "खुला",
+        statusClosed: "बन्द",
+        deadlineLabel: "अन्तिम मिति",
+        noEntries: "अहिलेसम्म कुनै प्रविष्टि छैन",
+        entryBtn: "📤 प्रविष्टि पेश गर्नुहोस्",
+        closeBtn: "यो प्रतियोगिता बन्द गर्नुहोस्",
+        nameInputPlaceholder: "स्टाफको नाम",
+        imageEntryLabel: "तस्बिरद्वारा प्रविष्ट गर्ने भए",
+        linkEntryLabel: "भिडियो/SNS पोस्टको URL द्वारा प्रविष्ट गर्ने भए",
+        commentPlaceholder: "टिप्पणी (वैकल्पिक)",
+        submitEntryBtn: "पेश गर्नुहोस्",
+        winnerLabel: "🏆 विजेता",
+        chooseWinnerBtn: "🏆 विजेताको रूपमा छनोट गर्नुहोस्",
+        noContests: "हाल कुनै प्रतियोगिता खुला छैन",
+        closedHistory: "बन्द भएका प्रतियोगिताहरू (पछिल्लो {{n}})",
+        nameRequired: "कृपया स्टाफको नाम प्रविष्ट गर्नुहोस्",
+        entryTypeRequired: "कृपया तस्बिर वा लिंक मध्ये एउटा प्रविष्ट गर्नुहोस्",
+        entrySubmitFailed: "प्रविष्टि पेश गर्न असफल भयो।",
+        compTitleRequired: "कृपया प्रतियोगिताको नाम प्रविष्ट गर्नुहोस्",
+        compStartFailed: "प्रतियोगिता सुरु गर्न असफल भयो।",
+        prizePrompt: "इनाम रकम (¥) प्रविष्ट गर्नुहोस्",
+        prizeInvalid: "कृपया मान्य रकम प्रविष्ट गर्नुहोस्",
+        winnerSetFailed: "विजेता सेट गर्न असफल भयो।",
+        closeConfirm: "यो प्रतियोगिता बन्द गर्ने हो? (अब प्रविष्टि स्वीकार गरिने छैन)",
+        closeFailed: "प्रतियोगिता बन्द गर्न असफल भयो।"
+      },
+      acquisition: {
+        screenTitle: "🧾 प्राप्ति तालिका",
+        addReceiptBtn: "📷 रसिद थप्नुहोस्",
+        monthLabel: "📅 महिना:",
+        storeTotalLabel: "पसल कुल:",
+        casesUnit: "वटा",
+        thRank: "स्थान", thNameRank: "नाम / र‍्याङ्क", thInstructed: "निर्देशित",
+        thVoluntary: "स्वैच्छिक", thTotal: "जम्मा", thEstIncentive: "अनुमानित भुक्तानी", thProof: "प्रमाण",
+        receiptsOf: "को पेश गरिएको रसिद प्रमाण",
+        noReceipts: "कुनै रसिद छैन",
+        sheetsCount: "{{n}} वटा फोटो",
+        paidLabel: "तलबी", unpaidLabel: "तलब नभएको"
+      },
+      reward: {
+        screenTitle: "🏆 पुरस्कार र‍्याङ्किङ",
+        storeTotalPayout: "पसलको कुल भुक्तानी:",
+        thReceiptReward: "रसिद इनाम", thQuestReward: "क्वेस्ट इनाम",
+        thCompReward: "प्रतियोगिता इनाम", thTotalPayout: "कुल भुक्तानी"
+      },
+      upload: {
+        title: "📷 रसिद थप्नुहोस्",
+        staffNameLabel: "स्टाफको नाम",
+        staffNamePlaceholder: "नाम लेख्नुहोस् वा छान्नुहोस्",
+        rankLabel: "हालको र‍्याङ्क",
+        rankNote: "नोट: पदोन्नति हुँदा यहाँ परिवर्तन गर्दा मास्टर रेकर्ड पनि स्वतः अपडेट हुन्छ।",
+        activityLabel: "गतिविधि प्रकार",
+        activityInstructed: "निर्देशित (तलबी)",
+        activityVoluntary: "स्वैच्छिक (तलब नभएको)",
+        photoLabel: "रसिद फोटो अपलोड गर्नुहोस्",
+        cancelBtn: "रद्द गर्नुहोस्",
+        submitBtn: "पेश गर्नुहोस्",
+        nameRequired: "कृपया स्टाफको नाम प्रविष्ट गर्नुहोस्",
+        compressing: "तस्बिर कम्प्रेस हुँदैछ...",
+        submitting: "पेश हुँदैछ...",
+        submitFailed: "पेश गर्न असफल भयो। कृपया इन्टरनेट जडान जाँची फेरि प्रयास गर्नुहोस्।"
+      },
+      master: {
+        title: "⚙️ मास्टर सेटिङ",
+        rankSectionTitle: "१. र‍्याङ्कको नाम र दर सेटिङ (थप्ने/सम्पादन)",
+        thRankName: "र‍्याङ्कको नाम", thRate: "दर (¥)", thAction: "कार्य",
+        addRankBtn: "+ नयाँ र‍्याङ्क थप्नुहोस्",
+        staffSectionTitle: "२. दर्ता भएका स्टाफ र हटाउने",
+        thStaffName: "स्टाफको नाम", thCurrentRank: "हालको र‍्याङ्क",
+        deleteBtn: "मेटाउनुहोस्", deleteStaffBtn: "हटाउनुहोस् (छोडेको)",
+        closeBtn: "बन्द गर्नुहोस्", saveBtn: "सेभ गर्नुहोस्", saving: "सेभ हुँदैछ...",
+        rankLabelInputPlaceholder: "र‍्याङ्कको नाम लेख्नुहोस्",
+        minRankRequired: "कम्तीमा एउटा र‍्याङ्क आवश्यक छ।",
+        deleteStaffConfirm: "स्टाफ \"{{name}}\" लाई मास्टर सूचीबाट हटाउने हो?",
+        deleteStaffFailed: "मेटाउन असफल भयो। कृपया जडान जाँच्नुहोस्।",
+        rankNameRequired: "कृपया र‍्याङ्कको नाम प्रविष्ट गर्नुहोस्।",
+        saveFirebaseSuccess: "र‍्याङ्क मास्टर Firebase मा सेभ र सिंक भयो!",
+        saveLocalSuccess: "मास्टर सेटिङ सेभ भयो (स्थानीय)",
+        saveFailed: "सेभ गर्न असफल भयो। कृपया जडान जाँची फेरि प्रयास गर्नुहोस्।",
+        usageSectionTitle: "३. Firestore नि:शुल्क प्रयोग स्थिति",
+        usageNote: "रसिद तस्बिरहरू Firebase Storage मा नभई कम्प्रेस गरेर Firestore (नि:शुल्क Spark प्लान) मा सिधै भण्डारण गरिन्छ। नि:शुल्क सीमा (जम्मा 1GB) मध्ये कति बाँकी छ यहाँ हेर्न सकिन्छ।",
+        checkUsageBtn: "📊 प्रयोग जाँच्नुहोस्",
+        checkingUsage: "गणना हुँदैछ...",
+        usageResult: "दर्ता संख्या: <b>{{count}}</b> (तस्बिरसहित: <b>{{imageCount}}</b>)<br>अनुमानित तस्बिर प्रयोग: <b>{{usedMB}} MB</b> / नि:शुल्क सीमा लगभग 1024 MB (<b>{{usedPercent}}%</b>)<br>{{remaining}}",
+        usageRemainingKnown: "हालको औसत तस्बिर साइज (लगभग {{avgKB}}KB प्रति फोटो) अनुसार, अझै लगभग <b>{{remainingImages}} वटा</b> भण्डारण गर्न सकिन्छ।",
+        usageRemainingUnknown: "अहिलेसम्म कुनै तस्बिर दर्ता नभएकाले बाँकी क्षमता अनुमान गर्न सकिँदैन।",
+        usageFetchFailed: "प्रयोग स्थिति प्राप्त गर्न असफल भयो। कृपया जडान जाँच्नुहोस्।"
+      },
+      common: {
+        guestJoin: "🧑 अतिथिको रूपमा सहभागी हुनुहोस्",
+        guestBadge: "🧑 अतिथि",
+        currentMonthSuffix: " ★ हालको",
+        questShort: "क्वेस्ट", compShort: "प्रतियोगिता", notSet: "सेट नगरिएको"
+      }
+    }
+  };
+
+  let currentLang = localStorage.getItem("incentiveBoardLang") || "ja";
+  if (!I18N[currentLang]) currentLang = "ja";
+
+  function t(path, vars) {
+    const get = (obj, p) => p.split(".").reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+    let str = get(I18N[currentLang], path);
+    if (str === undefined) str = get(I18N.ja, path);
+    if (str === undefined) return path;
+    if (vars) {
+      Object.keys(vars).forEach(k => {
+        str = str.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), vars[k]);
+      });
+    }
+    return str;
+  }
+
+  // 静的HTML内の data-i18n / data-i18n-placeholder 属性を現在の言語で反映する
+  function applyI18n() {
+    document.documentElement.lang = currentLang === "ja" ? "ja" : (currentLang === "ne" ? "ne" : "en");
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      el.innerHTML = t(el.getAttribute("data-i18n"));
+    });
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+      el.placeholder = t(el.getAttribute("data-i18n-placeholder"));
+    });
+    document.querySelectorAll("[data-i18n-title]").forEach(el => {
+      el.title = t(el.getAttribute("data-i18n-title"));
+    });
+    document.querySelectorAll(".lang-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.getAttribute("data-lang") === currentLang);
+    });
+  }
+
+  function setLanguage(lang) {
+    if (!I18N[lang]) return;
+    currentLang = lang;
+    localStorage.setItem("incentiveBoardLang", lang);
+    applyI18n();
+    initMonthSelect();
+    setSyncStatus(lastSyncStatus.state, lastSyncStatus.key);
+    renderRanking();
+    renderTaskList();
+    renderCompetitionList();
+    if (document.getElementById("masterModal").style.display === "flex") {
+      renderMasterRankTable();
+      renderStaffManagerTable();
+    }
+  }
+
+  // ============================================================
+  // ゲストモード（臨時スタッフ用の簡易参加）
+  // 正式なスタッフ名簿に登録しなくても「ゲスト」として
+  // レシート登録・クエスト受注・コンペ応募に参加できるようにする
+  // ============================================================
+  function generateGuestName() {
+    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `${t("common.guestBadge")}-${suffix}`;
+  }
+
+  function fillGuestName(inputId) {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    el.value = generateGuestName();
+    if (inputId === "staffNameInput") onStaffNameChange();
+  }
+
 
   // レシート画像をブラウザ内でリサイズ・JPEG圧縮し、Firestoreの1ドキュメント上限に収まるData URLにする
   function loadImageFromFile(file) {
@@ -902,7 +1565,7 @@
         let d = new Date(today.getFullYear(), today.getMonth() - i, 1);
         let ym = getYearMonthString(d);
         let label = `${d.getFullYear()}年${d.getMonth()+1}月 (${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()})`;
-        if (i === 0) label += " ★今月 / Current";
+        if (i === 0) label += t("common.currentMonthSuffix");
 
         let opt = document.createElement("option");
         opt.value = ym;
@@ -935,7 +1598,7 @@
     const records = acquisitionsData[selectedMonth] || [];
 
     let staffSummary = staffList.map(s => {
-      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定", rate: 0 };
+      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: t("common.notSet"), rate: 0 };
       const myRecords = records.filter(r => r.staffName === s.name);
       const instructedCount = myRecords.filter(r => r.type === "指示あり").length;
       const voluntaryCount = myRecords.filter(r => r.type === "自発的").length;
@@ -994,27 +1657,27 @@
             💰¥${item.totalAmount.toLocaleString()}
             ${(item.taskReward > 0 || item.compReward > 0) ? `
               <div style="font-size:0.62rem; color:#888; font-weight:normal;">
-                ${item.taskReward > 0 ? `⚔️クエスト¥${item.taskReward.toLocaleString()} ` : ''}${item.compReward > 0 ? `🎨コンペ¥${item.compReward.toLocaleString()}` : ''}
+                ${item.taskReward > 0 ? `⚔️${t("common.questShort")}¥${item.taskReward.toLocaleString()} ` : ''}${item.compReward > 0 ? `🎨${t("common.compShort")}¥${item.compReward.toLocaleString()}` : ''}
               </div>
             ` : ''}
           </td>
           <td>
             <button class="btn-receipt" onclick="toggleDrawer('${item.id}')">
-              📷 ${item.totalCount}枚
+              📷 ${t("acquisition.sheetsCount", { n: item.totalCount })}
             </button>
           </td>
         </tr>
         <tr id="drawer-${item.id}" class="receipt-drawer">
           <td colspan="7">
             <div style="text-align:left; font-size:0.78rem; margin-bottom:4px; font-weight:bold; color:#555;">
-              【${item.name} の提出レシート証拠 / Receipts】
+              【${item.name} ${t("acquisition.receiptsOf")}】
             </div>
             <div class="receipt-grid">
-              ${item.myRecords.length === 0 ? '<span style="font-size:0.78rem; color:#999;">レシートなし / No receipts</span>' : ''}
+              ${item.myRecords.length === 0 ? `<span style="font-size:0.78rem; color:#999;">${t("acquisition.noReceipts")}</span>` : ''}
               ${item.myRecords.map(r => `
                 <div class="receipt-item">
                   <img src="${r.image || PLACEHOLDER_IMG}" alt="レシート">
-                  <div>${r.time} (${r.type === '指示あり' ? 'Paid' : 'Unpaid'})</div>
+                  <div>${r.time} (${r.type === '指示あり' ? t("acquisition.paidLabel") : t("acquisition.unpaidLabel")})</div>
                 </div>
               `).join('')}
             </div>
@@ -1035,7 +1698,7 @@
     const records = acquisitionsData[selectedMonth] || [];
 
     let summary = staffList.map(s => {
-      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定", rate: 0 };
+      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: t("common.notSet"), rate: 0 };
       const myRecords = records.filter(r => r.staffName === s.name);
       const receiptReward = myRecords.length * rank.rate;
       const taskReward = getTaskRewardForStaff(s.id, selectedMonth);
@@ -1119,73 +1782,73 @@
     if (name === "reward") { renderRewardRanking(); }
   }
 
-  function renderTaskCard(t) {
+  function renderTaskCard(task) {
     let actionHtml = "";
-    if (t.status === "open") {
+    if (task.status === "open") {
       actionHtml = `
-        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="claimTask('${t.id}')">⚔️ クエストを受注する！</button>
-        <button class="btn-delete" onclick="cancelTask('${t.id}')">取消</button>
+        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="claimTask('${task.id}')">${t("quest.claimBtn")}</button>
+        <button class="btn-delete" onclick="cancelTask('${task.id}')">${t("quest.cancelBtn")}</button>
       `;
-    } else if (t.status === "claimed") {
+    } else if (task.status === "claimed") {
       actionHtml = `
-        <div style="font-size:0.78rem; color:#555; margin:4px 0;">挑戦者: <b>${t.claimedBy ? t.claimedBy.staffName : "-"}</b></div>
-        <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleTaskForm('${t.id}')">📮 達成報告</button>
-        <button class="btn-delete" onclick="cancelTask('${t.id}')">取消</button>
-        <div id="taskForm-${t.id}" class="tc-inline-form">
-          <div class="form-group"><input type="text" id="taskNote-${t.id}" placeholder="達成メモ（任意）"></div>
-          <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">証拠写真（任意）</label><input type="file" id="taskImg-${t.id}" accept="image/*"></div>
-          <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="submitTaskCompletion('${t.id}')">報告する</button>
+        <div style="font-size:0.78rem; color:#555; margin:4px 0;">${t("quest.challengerLabel")}: <b>${task.claimedBy ? task.claimedBy.staffName : "-"}</b></div>
+        <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleTaskForm('${task.id}')">${t("quest.reportBtn")}</button>
+        <button class="btn-delete" onclick="cancelTask('${task.id}')">${t("quest.cancelBtn")}</button>
+        <div id="taskForm-${task.id}" class="tc-inline-form">
+          <div class="form-group"><input type="text" id="taskNote-${task.id}" placeholder="${t("quest.reportNotePlaceholder")}"></div>
+          <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">${t("quest.proofImgLabel")}</label><input type="file" id="taskImg-${task.id}" accept="image/*"></div>
+          <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="submitTaskCompletion('${task.id}')">${t("quest.submitReportBtn")}</button>
         </div>
       `;
-    } else if (t.status === "submitted") {
+    } else if (task.status === "submitted") {
       actionHtml = `
-        <div style="font-size:0.78rem; color:#555; margin:4px 0;">挑戦者: <b>${t.claimedBy ? t.claimedBy.staffName : "-"}</b>${t.submissionNote ? " / メモ: " + t.submissionNote : ""}</div>
-        ${t.submissionImage ? `<img src="${t.submissionImage}" style="max-width:120px; border-radius:6px; display:block; margin-bottom:6px;" alt="達成報告写真">` : ""}
-        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="approveTask('${t.id}')">👍 承認する（報酬確定）</button>
+        <div style="font-size:0.78rem; color:#555; margin:4px 0;">${t("quest.challengerLabel")}: <b>${task.claimedBy ? task.claimedBy.staffName : "-"}</b>${task.submissionNote ? ` / ${t("quest.memoLabel")}: ` + task.submissionNote : ""}</div>
+        ${task.submissionImage ? `<img src="${task.submissionImage}" style="max-width:120px; border-radius:6px; display:block; margin-bottom:6px;" alt="達成報告写真">` : ""}
+        <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="approveTask('${task.id}')">${t("quest.approveBtn")}</button>
       `;
     } else {
       // approved（達成済み）: 単発なら履歴から再発注、繰り返しなら次回自動発注日を表示
       let repeatInfoHtml = "";
-      if (t.repeatMode === "recurring" && t.repeatIntervalDays) {
-        const approvedMs = toMillis(t.approvedAt);
-        if (t.spawnedNextTaskId) {
-          repeatInfoHtml = `<div style="font-size:0.72rem; color:#999; margin-top:4px;">🔁 次のクエストは発行済みです</div>`;
+      if (task.repeatMode === "recurring" && task.repeatIntervalDays) {
+        const approvedMs = toMillis(task.approvedAt);
+        if (task.spawnedNextTaskId) {
+          repeatInfoHtml = `<div style="font-size:0.72rem; color:#999; margin-top:4px;">${t("quest.nextSpawned")}</div>`;
         } else if (approvedMs) {
-          const dueDate = addDays(new Date(approvedMs), t.repeatIntervalDays).toLocaleDateString('ja-JP');
-          repeatInfoHtml = `<div style="font-size:0.72rem; color:#999; margin-top:4px;">🔁 ${dueDate} 頃に自動で再発注されます</div>`;
+          const dueDate = addDays(new Date(approvedMs), task.repeatIntervalDays).toLocaleDateString('ja-JP');
+          repeatInfoHtml = `<div style="font-size:0.72rem; color:#999; margin-top:4px;">${t("quest.nextDue", { date: dueDate })}</div>`;
         }
       }
-      const reorderBtn = (t.repeatMode !== "recurring")
-        ? `<button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem; margin-top:6px;" onclick="reorderQuest('${t.id}')">🔁 再発注する</button>`
+      const reorderBtn = (task.repeatMode !== "recurring")
+        ? `<button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem; margin-top:6px;" onclick="reorderQuest('${task.id}')">${t("quest.reorderBtn")}</button>`
         : "";
       actionHtml = `
-        <span style="font-size:0.78rem; color:var(--primary); font-weight:bold;">🏅 達成済み / 挑戦者: ${t.claimedBy ? t.claimedBy.staffName : "-"}</span>
+        <span style="font-size:0.78rem; color:var(--primary); font-weight:bold;">${t("quest.doneLabel")} / ${t("quest.challengerLabel")}: ${task.claimedBy ? task.claimedBy.staffName : "-"}</span>
         ${repeatInfoHtml}
         ${reorderBtn}
       `;
     }
 
-    const hasManual = t.manualText || t.manualImage;
+    const hasManual = task.manualText || task.manualImage;
     const manualHtml = hasManual ? `
-      <button class="btn-receipt" style="margin-top:6px;" onclick="toggleQuestManual('${t.id}')">📖 マニュアルを見る</button>
-      <div id="manual-${t.id}" style="display:none; margin-top:6px; background:#f7f6ff; padding:8px; border-radius:8px; font-size:0.78rem;">
-        ${t.manualText ? `<div style="white-space:pre-wrap; margin-bottom:${t.manualImage ? '6px' : '0'};">${t.manualText}</div>` : ""}
-        ${t.manualImage ? `<img src="${t.manualImage}" style="max-width:100%; border-radius:6px;" alt="マニュアル画像">` : ""}
+      <button class="btn-receipt" style="margin-top:6px;" onclick="toggleQuestManual('${task.id}')">${t("quest.manualViewBtn")}</button>
+      <div id="manual-${task.id}" style="display:none; margin-top:6px; background:#f7f6ff; padding:8px; border-radius:8px; font-size:0.78rem;">
+        ${task.manualText ? `<div style="white-space:pre-wrap; margin-bottom:${task.manualImage ? '6px' : '0'};">${task.manualText}</div>` : ""}
+        ${task.manualImage ? `<img src="${task.manualImage}" style="max-width:100%; border-radius:6px;" alt="マニュアル画像">` : ""}
       </div>
     ` : "";
 
-    const repeatBadge = t.repeatMode === "recurring"
-      ? `<span style="font-size:0.65rem; background:#ede9fe; color:var(--secondary-dark); padding:2px 6px; border-radius:8px; margin-left:6px;">🔁 ${t.repeatIntervalDays}日ごと</span>`
+    const repeatBadge = task.repeatMode === "recurring"
+      ? `<span style="font-size:0.65rem; background:#ede9fe; color:var(--secondary-dark); padding:2px 6px; border-radius:8px; margin-left:6px;">${t("quest.repeatBadge", { n: task.repeatIntervalDays })}</span>`
       : "";
 
-    const borderColor = QUEST_STATUS_COLOR[t.status] || "#ddd";
+    const borderColor = QUEST_STATUS_COLOR[task.status] || "#ddd";
     return `
       <div class="tc-card" style="border-left: 4px solid ${borderColor};">
         <div style="display:flex; justify-content:space-between; align-items:baseline;">
-          <b style="font-size:0.9rem;">${t.title}${repeatBadge}</b>
-          <span class="reward-text" style="font-size:0.85rem;">💰¥${(t.reward || 0).toLocaleString()}</span>
+          <b style="font-size:0.9rem;">${task.title}${repeatBadge}</b>
+          <span class="reward-text" style="font-size:0.85rem;">💰¥${(task.reward || 0).toLocaleString()}</span>
         </div>
-        ${t.description ? `<div style="font-size:0.78rem; color:#666; margin:2px 0 6px 0;">${t.description}</div>` : ""}
+        ${task.description ? `<div style="font-size:0.78rem; color:#666; margin:2px 0 6px 0;">${task.description}</div>` : ""}
         ${actionHtml}
         ${manualHtml}
       </div>
@@ -1209,18 +1872,18 @@
       .slice(0, 8);
 
     area.innerHTML = `
-      <h4 style="font-size:0.82rem; color:var(--secondary); margin:8px 0 4px;">📜 受注可能なクエスト (${open.length})</h4>
-      ${open.length ? open.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">現在受注できるクエストはありません</div>'}
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:8px 0 4px;">${t("quest.sectionOpen")} (${open.length})</h4>
+      ${open.length ? open.map(renderTaskCard).join('') : `<div style="font-size:0.78rem; color:#999;">${t("quest.emptyOpen")}</div>`}
 
-      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">⚔️ 挑戦中のクエスト (${claimed.length})</h4>
-      ${claimed.length ? claimed.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">挑戦中のクエストはありません</div>'}
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">${t("quest.sectionClaimed")} (${claimed.length})</h4>
+      ${claimed.length ? claimed.map(renderTaskCard).join('') : `<div style="font-size:0.78rem; color:#999;">${t("quest.emptyClaimed")}</div>`}
 
-      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">📝 報告済み・承認待ち (${submitted.length})</h4>
-      ${submitted.length ? submitted.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999;">承認待ちのクエストはありません</div>'}
+      <h4 style="font-size:0.82rem; color:var(--secondary); margin:12px 0 4px;">${t("quest.sectionSubmitted")} (${submitted.length})</h4>
+      ${submitted.length ? submitted.map(renderTaskCard).join('') : `<div style="font-size:0.78rem; color:#999;">${t("quest.emptySubmitted")}</div>`}
 
       <details style="margin-top:12px;">
-        <summary style="font-size:0.82rem; color:#666; cursor:pointer;">🏅 達成履歴（直近${approved.length}件）</summary>
-        ${approved.length ? approved.map(renderTaskCard).join('') : '<div style="font-size:0.78rem; color:#999; margin-top:6px;">まだ達成したクエストはありません</div>'}
+        <summary style="font-size:0.82rem; color:#666; cursor:pointer;">${t("quest.sectionHistory", { n: approved.length })}</summary>
+        ${approved.length ? approved.map(renderTaskCard).join('') : `<div style="font-size:0.78rem; color:#999; margin-top:6px;">${t("quest.emptyHistory")}</div>`}
       </details>
     `;
   }
@@ -1244,10 +1907,10 @@
     const manualText = document.getElementById("taskManualTextInput").value.trim();
     const manualImgInput = document.getElementById("taskManualImgInput");
 
-    if (!title) { alert("クエスト名を入力してください"); return; }
-    if (!reward || reward <= 0) { alert("報酬額を入力してください"); return; }
+    if (!title) { alert(t("quest.titleRequired")); return; }
+    if (!reward || reward <= 0) { alert(t("quest.rewardRequired")); return; }
     if (repeatMode === "recurring" && (!repeatIntervalDays || repeatIntervalDays <= 0)) {
-      alert("再発注までの日数を入力してください");
+      alert(t("quest.intervalRequired"));
       return;
     }
 
@@ -1277,7 +1940,7 @@
         await db.collection("tasks").doc(taskId).set({ ...newTask, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       } catch (e) {
         console.error("クエスト発行エラー:", e);
-        alert("クエストの発行に失敗しました。");
+        alert(t("quest.postFailed"));
         return;
       }
     } else {
@@ -1296,9 +1959,9 @@
   }
 
   async function claimTask(taskId) {
-    const input = prompt("受注者名を入力してください / Enter your name");
-    if (!input || !input.trim()) return;
-    const staffName = input.trim();
+    const input = prompt(t("quest.promptClaim"));
+    if (input === null) return;
+    const staffName = input.trim() || generateGuestName();
 
     if (firebaseEnabled) {
       try {
@@ -1323,15 +1986,15 @@
         });
       } catch (e) {
         if (e.message === "ALREADY_CLAIMED") {
-          alert("すでに他のスタッフが担当しています。");
+          alert(t("quest.alreadyClaimed"));
         } else {
           console.error("クエスト受注エラー:", e);
-          alert("担当登録に失敗しました。");
+          alert(t("quest.claimFailed"));
         }
       }
     } else {
       const task = tasksData.find(t => t.id === taskId);
-      if (!task || task.status !== "open") { alert("すでに他のスタッフが担当しています。"); return; }
+      if (!task || task.status !== "open") { alert(t("quest.alreadyClaimed")); return; }
       let existingStaff = staffList.find(s => s.name === staffName);
       let staffId = existingStaff ? existingStaff.id : genLocalId();
       if (!existingStaff) {
@@ -1365,7 +2028,7 @@
         });
       } catch (e) {
         console.error("完了報告エラー:", e);
-        alert("完了報告に失敗しました。");
+        alert(t("quest.reportFailed"));
       }
     } else {
       const task = tasksData.find(t => t.id === taskId);
@@ -1380,7 +2043,7 @@
   }
 
   async function approveTask(taskId) {
-    if (!confirm("このクエストを承認し、報酬を確定しますか？")) return;
+    if (!confirm(t("quest.approveConfirm"))) return;
     const month = getYearMonthString(new Date());
 
     if (firebaseEnabled) {
@@ -1392,7 +2055,7 @@
         });
       } catch (e) {
         console.error("クエスト承認エラー:", e);
-        alert("承認に失敗しました。");
+        alert(t("quest.approveFailed"));
       }
     } else {
       const task = tasksData.find(t => t.id === taskId);
@@ -1407,13 +2070,13 @@
   }
 
   async function cancelTask(taskId) {
-    if (!confirm("このクエストを取り消しますか？")) return;
+    if (!confirm(t("quest.cancelConfirm"))) return;
     if (firebaseEnabled) {
       try {
         await db.collection("tasks").doc(taskId).delete();
       } catch (e) {
         console.error("クエスト取消エラー:", e);
-        alert("取消に失敗しました。");
+        alert(t("quest.cancelFailed"));
       }
     } else {
       tasksData = tasksData.filter(t => t.id !== taskId);
@@ -1463,13 +2126,13 @@
   async function reorderQuest(taskId) {
     const source = tasksData.find(t => t.id === taskId);
     if (!source) return;
-    if (!confirm(`「${source.title}」を同じ内容で再発注しますか？`)) return;
+    if (!confirm(t("quest.reorderConfirm", { title: source.title }))) return;
     try {
       await cloneQuestAsNew(source);
       renderTaskList();
     } catch (e) {
       console.error("クエスト再発注エラー:", e);
-      alert("再発注に失敗しました。");
+      alert(t("quest.reorderFailed"));
     }
   }
 
@@ -1515,11 +2178,11 @@
           ? `<img src="${e.image}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; flex-shrink:0;" alt="応募作品">`
           : `<span style="font-size:1.3rem; flex-shrink:0;">🔗</span>`}
         <div style="flex:1; font-size:0.78rem; min-width:0;">
-          <b>${e.staffName}</b>${e.isWinner ? ` <span style="color:#d9a300;">🏆 優勝 ¥${(e.prizeAmount || 0).toLocaleString()}</span>` : ''}<br>
+          <b>${e.staffName}</b>${e.isWinner ? ` <span style="color:#d9a300;">${t("comp.winnerLabel")} ¥${(e.prizeAmount || 0).toLocaleString()}</span>` : ''}<br>
           ${e.entryType === "link" && e.link ? `<a href="${e.link}" target="_blank" rel="noopener noreferrer" style="word-break:break-all;">${e.link}</a><br>` : ''}
           ${e.comment ? `<span style="color:#666;">${e.comment}</span>` : ''}
         </div>
-        ${!e.isWinner ? `<button class="btn-receipt" style="flex-shrink:0;" onclick="chooseWinner('${e.id}')">🏆 優勝に選ぶ</button>` : ''}
+        ${!e.isWinner ? `<button class="btn-receipt" style="flex-shrink:0;" onclick="chooseWinner('${e.id}')">${t("comp.chooseWinnerBtn")}</button>` : ''}
       </div>
     `;
   }
@@ -1532,24 +2195,29 @@
       <div class="tc-card">
         <div style="display:flex; justify-content:space-between; align-items:baseline;">
           <b style="font-size:0.9rem;">${c.title}</b>
-          <span style="font-size:0.72rem; color:#999;">${isOpen ? "募集中" : "終了"}</span>
+          <span style="font-size:0.72rem; color:#999;">${isOpen ? t("comp.statusOpen") : t("comp.statusClosed")}</span>
         </div>
         ${c.description ? `<div style="font-size:0.78rem; color:#666; margin:2px 0 6px 0;">${c.description}</div>` : ""}
-        ${c.deadline ? `<div style="font-size:0.72rem; color:#999; margin-bottom:6px;">締切: ${c.deadline}</div>` : ""}
+        ${c.deadline ? `<div style="font-size:0.72rem; color:#999; margin-bottom:6px;">${t("comp.deadlineLabel")}: ${c.deadline}</div>` : ""}
 
         <div style="margin:8px 0;">
-          ${entries.length ? entries.map(renderCompetitionEntry).join('') : '<div style="font-size:0.78rem; color:#999;">まだ応募はありません</div>'}
+          ${entries.length ? entries.map(renderCompetitionEntry).join('') : `<div style="font-size:0.78rem; color:#999;">${t("comp.noEntries")}</div>`}
         </div>
 
         ${isOpen ? `
-          <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleEntryForm('${c.id}')">📤 作品を応募する</button>
-          <button class="btn-delete" onclick="closeCompetition('${c.id}')">このコンペを終了する</button>
+          <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.8rem;" onclick="toggleEntryForm('${c.id}')">${t("comp.entryBtn")}</button>
+          <button class="btn-delete" onclick="closeCompetition('${c.id}')">${t("comp.closeBtn")}</button>
           <div id="entryForm-${c.id}" class="tc-inline-form">
-            <div class="form-group"><input type="text" id="entryName-${c.id}" list="staffDatalist" placeholder="スタッフ名"></div>
-            <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">画像で応募する場合</label><input type="file" id="entryImg-${c.id}" accept="image/*"></div>
-            <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">動画/SNS投稿のURLで応募する場合</label><input type="text" id="entryLink-${c.id}" placeholder="https://..."></div>
-            <div class="form-group"><input type="text" id="entryComment-${c.id}" placeholder="コメント（任意）"></div>
-            <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="submitEntry('${c.id}')">応募する</button>
+            <div class="form-group">
+              <div style="display:flex; gap:6px;">
+                <input type="text" id="entryName-${c.id}" list="staffDatalist" placeholder="${t("comp.nameInputPlaceholder")}" style="flex:1;">
+                <button type="button" class="btn-receipt" style="white-space:nowrap;" onclick="fillGuestName('entryName-${c.id}')">${t("common.guestJoin")}</button>
+              </div>
+            </div>
+            <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">${t("comp.imageEntryLabel")}</label><input type="file" id="entryImg-${c.id}" accept="image/*"></div>
+            <div class="form-group"><label style="font-weight:normal; font-size:0.75rem;">${t("comp.linkEntryLabel")}</label><input type="text" id="entryLink-${c.id}" placeholder="https://..."></div>
+            <div class="form-group"><input type="text" id="entryComment-${c.id}" placeholder="${t("comp.commentPlaceholder")}"></div>
+            <button class="btn btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick="submitEntry('${c.id}')">${t("comp.submitEntryBtn")}</button>
           </div>
         ` : ''}
       </div>
@@ -1566,10 +2234,10 @@
       .slice(0, 5);
 
     area.innerHTML = `
-      ${active.length ? active.map(renderCompetitionCard).join('') : '<div style="font-size:0.78rem; color:#999;">開催中のコンペはありません</div>'}
+      ${active.length ? active.map(renderCompetitionCard).join('') : `<div style="font-size:0.78rem; color:#999;">${t("comp.noContests")}</div>`}
       ${closed.length ? `
         <details style="margin-top:12px;">
-          <summary style="font-size:0.82rem; color:#666; cursor:pointer;">終了したコンペ（直近${closed.length}件）</summary>
+          <summary style="font-size:0.82rem; color:#666; cursor:pointer;">${t("comp.closedHistory", { n: closed.length })}</summary>
           ${closed.map(renderCompetitionCard).join('')}
         </details>
       ` : ''}
@@ -1586,7 +2254,7 @@
     const description = document.getElementById("compDescInput").value.trim();
     const deadline = document.getElementById("compDeadlineInput").value || null;
 
-    if (!title) { alert("コンペ名を入力してください"); return; }
+    if (!title) { alert(t("comp.compTitleRequired")); return; }
 
     const newComp = { title, description, deadline, status: "open", closedMonth: null };
 
@@ -1595,7 +2263,7 @@
         await db.collection("competitions").add({ ...newComp, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       } catch (e) {
         console.error("コンペ開催エラー:", e);
-        alert("コンペの開催に失敗しました。");
+        alert(t("comp.compStartFailed"));
         return;
       }
     } else {
@@ -1615,7 +2283,7 @@
     const commentInput = document.getElementById(`entryComment-${compId}`);
 
     const staffName = nameInput.value.trim();
-    if (!staffName) { alert("スタッフ名を入力してください"); return; }
+    if (!staffName) { alert(t("comp.nameRequired")); return; }
 
     let entryType = "";
     let image = "";
@@ -1627,7 +2295,7 @@
       entryType = "link";
       link = linkInput.value.trim();
     } else {
-      alert("画像またはリンクのどちらかを入力してください");
+      alert(t("comp.entryTypeRequired"));
       return;
     }
     const comment = commentInput.value.trim();
@@ -1651,7 +2319,7 @@
         });
       } catch (e) {
         console.error("応募エラー:", e);
-        alert("応募に失敗しました。");
+        alert(t("comp.entrySubmitFailed"));
         return;
       }
     } else {
@@ -1677,10 +2345,10 @@
   }
 
   async function chooseWinner(entryId) {
-    const amountStr = prompt("賞金額(円)を入力してください", "1000");
+    const amountStr = prompt(t("comp.prizePrompt"), "1000");
     if (amountStr === null) return;
     const amount = parseInt(amountStr);
-    if (!amount || amount <= 0) { alert("正しい金額を入力してください"); return; }
+    if (!amount || amount <= 0) { alert(t("comp.prizeInvalid")); return; }
     const month = getYearMonthString(new Date());
 
     if (firebaseEnabled) {
@@ -1690,7 +2358,7 @@
         });
       } catch (e) {
         console.error("優勝設定エラー:", e);
-        alert("優勝設定に失敗しました。");
+        alert(t("comp.winnerSetFailed"));
       }
     } else {
       const entry = competitionEntriesData.find(e => e.id === entryId);
@@ -1705,13 +2373,13 @@
   }
 
   async function closeCompetition(compId) {
-    if (!confirm("このコンペを終了しますか？（応募の受付を締め切ります）")) return;
+    if (!confirm(t("comp.closeConfirm"))) return;
     if (firebaseEnabled) {
       try {
         await db.collection("competitions").doc(compId).update({ status: "closed" });
       } catch (e) {
         console.error("コンペ終了エラー:", e);
-        alert("終了処理に失敗しました。");
+        alert(t("comp.closeFailed"));
       }
     } else {
       const c = competitionsData.find(c => c.id === compId);
@@ -1752,11 +2420,13 @@
   let unsubCompetitions = null;
   let unsubCompetitionEntries = null;
 
-  function setSyncStatus(state, message) {
+  let lastSyncStatus = { state: "off", key: "sync.localOnly" };
+  function setSyncStatus(state, key) {
+    lastSyncStatus = { state, key };
     const el = document.getElementById("syncStatus");
     if (!el) return;
     const icons = { ok: "🔥", off: "💾", error: "⚠️" };
-    el.textContent = `${icons[state] || ""} ${message}`;
+    el.textContent = `${icons[state] || ""} ${t(key)}`;
   }
 
   async function seedRankMasterIfEmpty() {
@@ -1792,7 +2462,7 @@
       }
     }, err => {
       console.error("rankMaster同期エラー:", err);
-      setSyncStatus("error", "同期エラー");
+      setSyncStatus("error", "sync.syncError");
     });
   }
 
@@ -1807,7 +2477,7 @@
       }
     }, err => {
       console.error("staff同期エラー:", err);
-      setSyncStatus("error", "同期エラー");
+      setSyncStatus("error", "sync.syncError");
     });
   }
 
@@ -1820,7 +2490,7 @@
         renderRanking();
       }, err => {
         console.error("acquisitions同期エラー:", err);
-        setSyncStatus("error", "同期エラー");
+        setSyncStatus("error", "sync.syncError");
       });
   }
 
@@ -1874,24 +2544,24 @@
     event.preventDefault();
     const pin = document.getElementById("pinLoginInput").value.trim();
     if (!pin) return false;
-    document.getElementById("pinLoginStatus").textContent = "ログイン中...";
+    document.getElementById("pinLoginStatus").textContent = t("login.loggingIn");
     try {
       await auth.signInWithEmailAndPassword(sharedLoginEmail, pin);
     } catch (err) {
-      document.getElementById("pinLoginStatus").textContent = "PINコードが違います";
+      document.getElementById("pinLoginStatus").textContent = t("login.wrongPin");
     }
     return false;
   }
   window.handlePinLoginSubmit = handlePinLoginSubmit;
 
   async function initFirebaseSync() {
-    setSyncStatus("ok", "接続確認中...");
+    setSyncStatus("ok", "sync.connecting");
     sharedLoginEmail = "staff@" + (firebaseConfig.projectId || "app") + ".local";
 
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
         showPinLoginOverlay();
-        setSyncStatus("off", "PINコードを入力してください");
+        setSyncStatus("off", "sync.pinRequired");
         return;
       }
       hidePinLoginOverlay();
@@ -1906,10 +2576,10 @@
         attachTasksListener();
         attachCompetitionsListener();
         attachCompetitionEntriesListener();
-        setSyncStatus("ok", "Firebase 連携中 (リアルタイム同期)");
+        setSyncStatus("ok", "sync.connected");
       } catch (err) {
         console.error("Firebase初期化エラー:", err);
-        setSyncStatus("error", "Firebase接続エラー（ローカルのみで動作）");
+        setSyncStatus("error", "sync.connectError");
       }
     });
   }
@@ -1923,22 +2593,22 @@
     const submitBtn = document.getElementById("submitBtn");
 
     if (!name) {
-      alert("スタッフ名を入力してください / Please enter staff name");
+      alert(t("upload.nameRequired"));
       return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.innerText = "送信中...";
+    submitBtn.innerText = t("upload.submitting");
 
     const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
     try {
       let image = "";
       if (fileInput.files.length > 0) {
-        submitBtn.innerText = "画像を圧縮中...";
+        submitBtn.innerText = t("upload.compressing");
         image = await compressImageToDataUrl(fileInput.files[0]);
       }
-      submitBtn.innerText = "送信中...";
+      submitBtn.innerText = t("upload.submitting");
 
       if (firebaseEnabled) {
         const existingStaff = staffList.find(s => s.name === name);
@@ -1984,10 +2654,10 @@
       fileInput.value = "";
     } catch (err) {
       console.error("登録エラー:", err);
-      alert("登録に失敗しました。通信状況をご確認の上、再度お試しください。");
+      alert(t("upload.submitFailed"));
     } finally {
       submitBtn.disabled = false;
-      submitBtn.innerText = "登録する / Submit";
+      submitBtn.innerText = t("upload.submitBtn");
     }
   }
 
@@ -2006,7 +2676,7 @@
     const btn = document.getElementById("checkUsageBtn");
     const resultEl = document.getElementById("usageResult");
     btn.disabled = true;
-    btn.innerText = "集計中...";
+    btn.innerText = t("master.checkingUsage");
     resultEl.innerHTML = "";
 
     try {
@@ -2029,19 +2699,19 @@
         ? Math.max(0, Math.floor((FREE_LIMIT_BYTES - totalImageBytes) / avgPerImage))
         : null;
 
-      resultEl.innerHTML = `
-        登録件数: <b>${snap.size}</b> 件（画像あり: <b>${imageCount}</b> 枚）<br>
-        画像の推定使用量: <b>${usedMB} MB</b> / 無料枠 約1024 MB（<b>${usedPercent}%</b>）<br>
-        ${remainingImages !== null
-          ? `現在の平均画像サイズ（約${Math.round(avgPerImage / 1024)}KB/枚）なら、あと約 <b>${remainingImages.toLocaleString()}枚</b> 保存できる見込みです。`
-          : "画像がまだ登録されていないため、保存可能枚数の見積もりはできません。"}
-      `;
+      const remaining = remainingImages !== null
+        ? t("master.usageRemainingKnown", { avgKB: Math.round(avgPerImage / 1024), remainingImages: remainingImages.toLocaleString() })
+        : t("master.usageRemainingUnknown");
+
+      resultEl.innerHTML = t("master.usageResult", {
+        count: snap.size, imageCount, usedMB, usedPercent, remaining
+      });
     } catch (e) {
       console.error("使用量集計エラー:", e);
-      resultEl.innerHTML = `<span style="color:var(--accent);">使用量の取得に失敗しました。通信状況をご確認ください。</span>`;
+      resultEl.innerHTML = `<span style="color:var(--accent);">${t("master.usageFetchFailed")}</span>`;
     } finally {
       btn.disabled = false;
-      btn.innerText = "📊 使用量を確認する";
+      btn.innerText = t("master.checkUsageBtn");
     }
   }
 
@@ -2058,7 +2728,7 @@
             ¥ <input type="number" class="rank-input-rate" value="${m.rate}" style="width:70px; padding:4px;">
           </td>
           <td style="padding:4px; border:1px solid #ccc; text-align:center;">
-            <button class="btn-delete" onclick="deleteRankRow(this)">削除</button>
+            <button class="btn-delete" onclick="deleteRankRow(this)">${t("master.deleteBtn")}</button>
           </td>
         </tr>
       `;
@@ -2073,13 +2743,13 @@
     newRow.setAttribute("data-key", newKey);
     newRow.innerHTML = `
       <td style="padding:4px; border:1px solid #ccc;">
-        <input type="text" class="rank-input-label" placeholder="ランク名を入力" style="width:100%; padding:4px; box-sizing:border-box;">
+        <input type="text" class="rank-input-label" placeholder="${t("master.rankLabelInputPlaceholder")}" style="width:100%; padding:4px; box-sizing:border-box;">
       </td>
       <td style="padding:4px; border:1px solid #ccc;">
         ¥ <input type="number" class="rank-input-rate" value="500" style="width:70px; padding:4px;">
       </td>
       <td style="padding:4px; border:1px solid #ccc; text-align:center;">
-        <button class="btn-delete" onclick="deleteRankRow(this)">削除</button>
+        <button class="btn-delete" onclick="deleteRankRow(this)">${t("master.deleteBtn")}</button>
       </td>
     `;
     tbodyMaster.appendChild(newRow);
@@ -2088,7 +2758,7 @@
   function deleteRankRow(btn) {
     const tbody = document.getElementById("masterTableBody");
     if (tbody.querySelectorAll("tr").length <= 1) {
-      alert("最低1つのランクが必要です。");
+      alert(t("master.minRankRequired"));
       return;
     }
     btn.closest("tr").remove();
@@ -2098,13 +2768,13 @@
     const tbodyStaff = document.getElementById("staffManagerTableBody");
     tbodyStaff.innerHTML = "";
     staffList.forEach((s) => {
-      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: "未設定" };
+      const rank = rankMaster.find(m => m.key === s.rankKey) || rankMaster[0] || { label: t("common.notSet") };
       tbodyStaff.innerHTML += `
         <tr>
           <td style="padding:6px; border:1px solid #ccc; font-weight:bold;">${s.name}</td>
           <td style="padding:6px; border:1px solid #ccc;">${rank.label}</td>
           <td style="padding:6px; border:1px solid #ccc; text-align:center;">
-            <button class="btn-delete" onclick="deleteStaff('${s.id}')">削除 (退職)</button>
+            <button class="btn-delete" onclick="deleteStaff('${s.id}')">${t("master.deleteStaffBtn")}</button>
           </td>
         </tr>
       `;
@@ -2113,13 +2783,13 @@
 
   async function deleteStaff(staffId) {
     const target = staffList.find(s => String(s.id) === String(staffId));
-    if (target && confirm(`スタッフ「${target.name}」さんをマスターから削除しますか？`)) {
+    if (target && confirm(t("master.deleteStaffConfirm", { name: target.name }))) {
       if (firebaseEnabled) {
         try {
           await db.collection("staff").doc(String(staffId)).delete();
         } catch (e) {
           console.error("削除エラー:", e);
-          alert("削除に失敗しました。通信状況をご確認ください。");
+          alert(t("master.deleteStaffFailed"));
           return;
         }
       } else {
@@ -2134,7 +2804,7 @@
   async function saveMasterSettings() {
     const saveBtn = document.getElementById("saveMasterBtn");
     saveBtn.disabled = true;
-    saveBtn.innerText = "保存中...";
+    saveBtn.innerText = t("master.saving");
 
     const rows = document.querySelectorAll("#masterTableBody tr.rank-row");
     const newRankList = [];
@@ -2157,9 +2827,9 @@
     });
 
     if (newRankList.length === 0) {
-      alert("ランク名を入力してください。");
+      alert(t("master.rankNameRequired"));
       saveBtn.disabled = false;
-      saveBtn.innerText = "保存 / Save";
+      saveBtn.innerText = t("master.saveBtn");
       return;
     }
 
@@ -2182,13 +2852,13 @@
       }
 
       closeModal('masterModal');
-      alert(firebaseEnabled ? "ランクマスタをFirebaseに保存・同期しました！" : "マスタ設定を保存しました（ローカル）");
+      alert(firebaseEnabled ? t("master.saveFirebaseSuccess") : t("master.saveLocalSuccess"));
     } catch (e) {
       console.error("マスタ同期エラー:", e);
-      alert("保存に失敗しました。通信状況をご確認の上、再度お試しください。");
+      alert(t("master.saveFailed"));
     } finally {
       saveBtn.disabled = false;
-      saveBtn.innerText = "保存 / Save";
+      saveBtn.innerText = t("master.saveBtn");
     }
   }
 
@@ -2369,6 +3039,7 @@
   }
 
   // 初期実行
+  applyI18n();
   initMonthSelect();
   refreshStaffUI();
   renderRanking();
@@ -2376,9 +3047,9 @@
   if (firebaseEnabled) {
     initFirebaseSync();
   } else if (firebaseConfigured) {
-    setSyncStatus("error", "Firebase SDKの読み込みに失敗しました（ローカルのみで動作中）");
+    setSyncStatus("error", "sync.sdkLoadError");
   } else {
-    setSyncStatus("off", "ローカルのみ動作中（Firebase未設定）");
+    setSyncStatus("off", "sync.localOnly");
   }
 </script>
 </body>
